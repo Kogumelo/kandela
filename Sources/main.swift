@@ -9,7 +9,8 @@ import AppKit
 // it (ignoresMouseEvents) and it is left out of screenshots (sharingType = .none).
 // No special permission is needed.
 //
-// Code and comments are in English; only the user-facing menu titles are in Portuguese.
+// Code and comments are in English. Menu titles are localized: the English text is the
+// key, and Resources/<lang>.lproj/Localizable.strings holds the translations.
 
 // MARK: - Overlay window
 
@@ -245,13 +246,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
 
-        let toggle = NSMenuItem(title: "Ativado", action: #selector(toggleEnabled), keyEquivalent: "")
+        let toggle = NSMenuItem(title: NSLocalizedString("Enabled", comment: "Menu item: turns dimming on/off"),
+                                action: #selector(toggleEnabled), keyEquivalent: "")
         toggle.target = self
         toggle.state = enabled ? .on : .off
         menu.addItem(toggle)
 
         menu.addItem(.separator())
-        let header = NSMenuItem(title: "Intensidade", action: nil, keyEquivalent: "")
+        let header = NSMenuItem(title: NSLocalizedString("Intensity", comment: "Menu header above the percentages"),
+                                action: nil, keyEquivalent: "")
         header.isEnabled = false
         menu.addItem(header)
         for pct in [20, 35, 50, 65, 80] {
@@ -263,14 +266,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
 
         menu.addItem(.separator())
-        let mode = NSMenuItem(title: "Destacar todas as janelas do app",
+        let mode = NSMenuItem(title: NSLocalizedString("Highlight All App Windows",
+                                                        comment: "Menu item: keep every window of the focused app lit"),
                               action: #selector(toggleAppMode), keyEquivalent: "")
         mode.target = self
         mode.state = appMode ? .on : .off
         menu.addItem(mode)
 
         menu.addItem(.separator())
-        let quit = NSMenuItem(title: "Sair do Kandela",
+        let quit = NSMenuItem(title: NSLocalizedString("Quit Kandela", comment: "Menu item"),
                               action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         quit.target = NSApp
         menu.addItem(quit)

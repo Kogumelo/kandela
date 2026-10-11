@@ -1,0 +1,13 @@
+/* English is the development language: keys are the English text itself. */
+
+/* Menu item: turns dimming on/off */
+"Enabled" = "Enabled";
+
+/* Menu header above the percentages */
+"Intensity" = "Intensity";
+
+/* Menu item: keep every window of the focused app lit */
+"Highlight All App Windows" = "Highlight All App Windows";
+
+/* Menu item */
+"Quit Kandela" = "Quit Kandela";
