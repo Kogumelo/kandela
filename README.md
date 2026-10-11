@@ -1,6 +1,6 @@
 # Kandela
 
-Dimmer de distrações local e minimalista para Mac (alternativa livre ao
+Escurecedor de distrações local e minimalista para Mac (alternativa livre ao
 [HazeOver](https://hazeover.com)): escurece todas as janelas exceto a que está
 em foco. Feito em Swift/AppKit puro, ~250 linhas, sem dependências, sem
 permissões especiais (não pede Acessibilidade nem Gravação de Tela).
@@ -14,7 +14,7 @@ por K (ver também o [Konfig](https://github.com/Kogumelo/konfig)). Chamava-se
 Uma janela preta translúcida por monitor é mantida sempre **logo abaixo** da
 janela em foco na pilha global de janelas do macOS (números de janela são
 globais, então dá para ordenar relativo a janelas de outros apps). Cliques
-atravessam o overlay, e ele não aparece em capturas de tela.
+atravessam esse véu, e ele não aparece em capturas de tela.
 
 ## Compilar e rodar
 
