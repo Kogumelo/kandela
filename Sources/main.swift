@@ -41,17 +41,24 @@ final class OverlayWindow: NSWindow {
 func kandelaMark(size: CGFloat) -> NSImage {
     let img = NSImage(size: NSSize(width: size, height: size), flipped: true) { rect in
         let s = rect.width / 100
-        let stem = NSBezierPath(roundedRect: NSRect(x: 23.59 * s, y: 16 * s,
+        func p(_ x: CGFloat, _ y: CGFloat) -> NSPoint { NSPoint(x: x * s, y: y * s) }
+        let r = 3 * s
+
+        let stem = NSBezierPath(roundedRect: NSRect(x: 22.43 * s, y: 16 * s,
                                                     width: 22 * s, height: 68 * s),
-                                xRadius: 3 * s, yRadius: 3 * s)
+                                xRadius: r, yRadius: r)
         NSColor.black.withAlphaComponent(0.42).setFill()
         stem.fill()
 
+        // Braços: 22 de largura na horizontal (igual à haste), cantos das pontas
+        // com o mesmo raio da haste; a ponta e o encaixe continuam vivos.
         let arms = NSBezierPath()
-        let pts: [(CGFloat, CGFloat)] = [(32.39, 50), (56.73, 16), (76.41, 16),
-                                         (52.07, 50), (76.41, 84), (56.73, 84)]
-        arms.move(to: NSPoint(x: pts[0].0 * s, y: pts[0].1 * s))
-        for p in pts.dropFirst() { arms.line(to: NSPoint(x: p.0 * s, y: p.1 * s)) }
+        arms.move(to: p(31.23, 50))
+        arms.appendArc(from: p(55.57, 16), to: p(77.57, 16), radius: r)
+        arms.appendArc(from: p(77.57, 16), to: p(53.23, 50), radius: r)
+        arms.line(to: p(53.23, 50))
+        arms.appendArc(from: p(77.57, 84), to: p(55.57, 84), radius: r)
+        arms.appendArc(from: p(55.57, 84), to: p(31.23, 50), radius: r)
         arms.close()
         NSColor.black.setFill()
         arms.fill()

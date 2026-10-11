@@ -1,22 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="1024" height="1024">
   <!-- Ícone do Kandela, igual ao Resources/AppIcon.icns (gerado por Tools/make-icon.swift).
        Placa no gabarito do macOS (84 de lado dentro de 100, raio 19).
-       Marca de Assets/kandela-mark.svg reduzida a 66% da placa (escala 0,5544), centralizada:
-       haste 22 apagada atrás, braços 16 acesos por cima, sem vão. -->
+       Marca de Assets/kandela-mark.svg reduzida a 66% da placa (escala 0,5544), centralizada. -->
   <defs>
     <radialGradient id="placa" cx=".3" cy=".2" r="1.2">
       <stop offset="0" stop-color="#2a3350"/><stop offset=".7" stop-color="#0d1020"/>
     </radialGradient>
-    <filter id="brilho" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="1.4" result="b"/>
-      <feFlood flood-color="#ffd9a0" flood-opacity=".3"/>
-      <feComposite in2="b" operator="in"/>
-      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
   </defs>
   <rect x="8" y="8" width="84" height="84" rx="19" fill="url(#placa)"/>
   <g transform="translate(22.28 22.28) scale(.5544)">
-    <rect x="23.59" y="16" width="22" height="68" rx="3" fill="#7f8db8"/>
-    <path d="M32.39 50 L56.73 16 H76.41 L52.07 50 L76.41 84 H56.73 Z" fill="#fff3dc" filter="url(#brilho)"/>
+    <rect x="22.43" y="16" width="22" height="68" rx="3" fill="#7f8db8"/>
+    <path d="M31.23 50 L54.67 17.25 A3 3 0 0 1 57.11 16 L71.73 16 A3 3 0 0 1 74.17 20.75 L53.23 50 L74.17 79.25 A3 3 0 0 1 71.73 84 L57.11 84 A3 3 0 0 1 54.67 82.75 Z" fill="#fff3dc"/>
   </g>
 </svg>
