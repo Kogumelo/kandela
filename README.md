@@ -26,7 +26,7 @@ macOS 11 ou mais novo.
 open Kandela.app
 ```
 
-Aparece um ícone ◐ na barra de menus com:
+Aparece o K do Kandela na barra de menus com:
 
 - **Ativado** — liga/desliga o escurecimento
 - **Intensidade** — 20% a 80%
@@ -37,6 +37,19 @@ Aparece um ícone ◐ na barra de menus com:
 As preferências ficam salvas em `defaults` (`br.com.kogut.kandela`). Na
 primeira abertura, o Kandela copia as que o `km-dimmer` tinha guardado em
 `br.com.kogut.km-dimmer`.
+
+## Ícone
+
+A marca (um K: haste apagada atrás, braços acesos por cima) está em
+`Assets/kandela-mark.svg`. O ícone da barra de menus é desenhado em código
+(`kandelaMark()` em `Sources/main.swift`); o do app fica em
+`Resources/AppIcon.icns`, gerado por:
+
+```sh
+swift Tools/make-icon.swift
+```
+
+As três versões usam a mesma geometria: mudou uma, mude as outras.
 
 ## Iniciar junto com o sistema
 
