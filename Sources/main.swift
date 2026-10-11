@@ -33,6 +33,35 @@ final class OverlayWindow: NSWindow {
     override var canBecomeMain: Bool { false }
 }
 
+// MARK: - Marca (ícone da barra de menus)
+
+// O K do Kandela, na grade 100×100 de Assets/kandela-mark.svg: haste apagada
+// atrás, braços cheios por cima. Imagem-modelo (template), então o macOS pinta
+// de preto ou branco conforme a barra; a haste usa só a transparência.
+func kandelaMark(size: CGFloat) -> NSImage {
+    let img = NSImage(size: NSSize(width: size, height: size), flipped: true) { rect in
+        let s = rect.width / 100
+        let stem = NSBezierPath(roundedRect: NSRect(x: 23.59 * s, y: 16 * s,
+                                                    width: 22 * s, height: 68 * s),
+                                xRadius: 3 * s, yRadius: 3 * s)
+        NSColor.black.withAlphaComponent(0.42).setFill()
+        stem.fill()
+
+        let arms = NSBezierPath()
+        let pts: [(CGFloat, CGFloat)] = [(32.39, 50), (56.73, 16), (76.41, 16),
+                                         (52.07, 50), (76.41, 84), (56.73, 84)]
+        arms.move(to: NSPoint(x: pts[0].0 * s, y: pts[0].1 * s))
+        for p in pts.dropFirst() { arms.line(to: NSPoint(x: p.0 * s, y: p.1 * s)) }
+        arms.close()
+        NSColor.black.setFill()
+        arms.fill()
+        return true
+    }
+    img.isTemplate = true
+    img.accessibilityDescription = "Kandela"
+    return img
+}
+
 // MARK: - Delegate principal
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
@@ -165,12 +194,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func buildStatusItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        if let img = NSImage(systemSymbolName: "circle.lefthalf.filled",
-                             accessibilityDescription: "Kandela") {
-            item.button?.image = img
-        } else {
-            item.button?.title = "◐"
-        }
+        item.button?.image = kandelaMark(size: 18)
         let menu = NSMenu()
         menu.delegate = self
         menu.autoenablesItems = false

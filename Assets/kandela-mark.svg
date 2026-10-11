@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Kandela: haste 22 apagada atrás, braços 16 (54,4°) cheios por cima, sem vão -->
+  <rect x="23.59" y="16" width="22" height="68" rx="3" fill="#000" fill-opacity="0.42"/>
+  <path d="M32.39 50 L56.73 16 H76.41 L52.07 50 L76.41 84 H56.73 Z" fill="#000"/>
+</svg>
