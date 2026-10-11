@@ -35,33 +35,53 @@ final class OverlayWindow: NSWindow {
 
 // MARK: - Marca (ícone da barra de menus)
 
-// O K do Kandela, na grade 100×100 de Assets/kandela-mark.svg: haste apagada
-// atrás, braços cheios por cima. Imagem-modelo (template), então o macOS pinta
-// de preto ou branco conforme a barra; a haste usa só a transparência.
+// O K do Kandela, na grade 100×100 de Assets/kandela-mark.svg: janela de fundo
+// (bloco 72×40) com os três pontos do macOS vazados no alto à esquerda; a parte
+// dela à esquerda do vértice é a haste. Os braços ficam vazados (contorno 5)
+// dentro de um recorte de 10 no bloco. Imagem-modelo (template), então o macOS
+// pinta de preto ou branco conforme a barra.
+func kandelaArms(_ p: (CGFloat, CGFloat) -> NSPoint, radius r: CGFloat) -> NSBezierPath {
+    // Braços: 22 de largura na horizontal, cantos das pontas com raio 3;
+    // a ponta e o encaixe continuam vivos.
+    let arms = NSBezierPath()
+    arms.move(to: p(31.23, 50))
+    arms.appendArc(from: p(55.57, 16), to: p(77.57, 16), radius: r)
+    arms.appendArc(from: p(77.57, 16), to: p(53.23, 50), radius: r)
+    arms.line(to: p(53.23, 50))
+    arms.appendArc(from: p(77.57, 84), to: p(55.57, 84), radius: r)
+    arms.appendArc(from: p(55.57, 84), to: p(31.23, 50), radius: r)
+    arms.close()
+    arms.lineJoinStyle = .round
+    return arms
+}
+
+let kandelaDots: [CGFloat] = [18.5, 24.5, 30.5]   // centros dos pontos, em y = 36, raio 2,4
+
 func kandelaMark(size: CGFloat) -> NSImage {
     let img = NSImage(size: NSSize(width: size, height: size), flipped: true) { rect in
         let s = rect.width / 100
         func p(_ x: CGFloat, _ y: CGFloat) -> NSPoint { NSPoint(x: x * s, y: y * s) }
-        let r = 3 * s
+        let ctx = NSGraphicsContext.current!
+        let arms = kandelaArms(p, radius: 3 * s)
 
-        let stem = NSBezierPath(roundedRect: NSRect(x: 22.43 * s, y: 16 * s,
-                                                    width: 22 * s, height: 68 * s),
-                                xRadius: r, yRadius: r)
-        NSColor.black.withAlphaComponent(0.42).setFill()
-        stem.fill()
-
-        // Braços: 22 de largura na horizontal (igual à haste), cantos das pontas
-        // com o mesmo raio da haste; a ponta e o encaixe continuam vivos.
-        let arms = NSBezierPath()
-        arms.move(to: p(31.23, 50))
-        arms.appendArc(from: p(55.57, 16), to: p(77.57, 16), radius: r)
-        arms.appendArc(from: p(77.57, 16), to: p(53.23, 50), radius: r)
-        arms.line(to: p(53.23, 50))
-        arms.appendArc(from: p(77.57, 84), to: p(55.57, 84), radius: r)
-        arms.appendArc(from: p(55.57, 84), to: p(31.23, 50), radius: r)
-        arms.close()
         NSColor.black.setFill()
+        NSBezierPath(roundedRect: NSRect(x: 14 * s, y: 30 * s, width: 72 * s, height: 40 * s),
+                     xRadius: 4 * s, yRadius: 4 * s).fill()
+
+        // Recorte: braços engrossados (vão) e os três pontos.
+        ctx.compositingOperation = .destinationOut
+        arms.lineWidth = 10 * s
         arms.fill()
+        arms.stroke()
+        for cx in kandelaDots {
+            NSBezierPath(ovalIn: NSRect(x: (cx - 2.4) * s, y: (36 - 2.4) * s,
+                                        width: 4.8 * s, height: 4.8 * s)).fill()
+        }
+        ctx.compositingOperation = .sourceOver
+
+        NSColor.black.setStroke()
+        arms.lineWidth = 5 * s
+        arms.stroke()
         return true
     }
     img.isTemplate = true
