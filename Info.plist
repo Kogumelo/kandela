@@ -3,13 +3,13 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleName</key>
-	<string>km-dimmer</string>
+	<string>Kandela</string>
 	<key>CFBundleDisplayName</key>
-	<string>km-dimmer</string>
+	<string>Kandela</string>
 	<key>CFBundleIdentifier</key>
-	<string>br.com.kogut.km-dimmer</string>
+	<string>br.com.kogut.kandela</string>
 	<key>CFBundleExecutable</key>
-	<string>km-dimmer</string>
+	<string>Kandela</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

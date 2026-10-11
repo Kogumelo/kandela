@@ -1,11 +1,13 @@
-# km-dimmer
+# Kandela
 
-Dimmer de distrações local e minimalista (substituto do [HazeOver](https://hazeover.com)):
-escurece todas as janelas exceto a que está em foco. Feito em Swift/AppKit
-puro, ~250 linhas, sem dependências, sem permissões especiais (não pede
-Acessibilidade nem Gravação de Tela).
+Dimmer de distrações local e minimalista para Mac (alternativa livre ao
+[HazeOver](https://hazeover.com)): escurece todas as janelas exceto a que está
+em foco. Feito em Swift/AppKit puro, ~250 linhas, sem dependências, sem
+permissões especiais (não pede Acessibilidade nem Gravação de Tela).
 
-Parte do ecossistema de utilitários `km-*`.
+Parte da família de ferramentas da Kogumelo, que têm nome próprio começando
+por K (ver também o [Konfig](https://github.com/Kogumelo/konfig)). Chamava-se
+`km-dimmer` até 11/10/2026.
 
 ## Como funciona
 
@@ -16,9 +18,12 @@ atravessam o overlay, e ele não aparece em capturas de tela.
 
 ## Compilar e rodar
 
+Precisa do Swift das Xcode Command Line Tools (`xcode-select --install`) e do
+macOS 11 ou mais novo.
+
 ```sh
 ./build.sh
-open km-dimmer.app
+open Kandela.app
 ```
 
 Aparece um ícone ◐ na barra de menus com:
@@ -27,13 +32,15 @@ Aparece um ícone ◐ na barra de menus com:
 - **Intensidade** — 20% a 80%
 - **Destacar todas as janelas do app** — em vez de só a janela frontal,
   todas as janelas do app em foco ficam claras
-- **Sair do km-dimmer**
+- **Sair do Kandela**
 
-As preferências ficam salvas em `defaults` (`br.com.kogut.km-dimmer`).
+As preferências ficam salvas em `defaults` (`br.com.kogut.kandela`). Na
+primeira abertura, o Kandela copia as que o `km-dimmer` tinha guardado em
+`br.com.kogut.km-dimmer`.
 
 ## Iniciar junto com o sistema
 
-Ajustes do Sistema → Geral → Itens de Início e Extensões → "+" → km-dimmer.app
+Ajustes do Sistema → Geral → Itens de Início e Extensões → "+" → Kandela.app
 
 ## Limitações conhecidas (vs. HazeOver pago)
 
@@ -42,3 +49,7 @@ Ajustes do Sistema → Geral → Itens de Início e Extensões → "+" → km-di
 - Sem intensidade por monitor independente.
 - Trocas de foco dentro do mesmo app são detectadas por polling (0,2 s),
   não por evento — imperceptível na prática, CPU ~0%.
+
+## Licença
+
+[MIT](LICENSE) © 2026 Kogumelo Informática Ltda

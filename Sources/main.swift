@@ -1,6 +1,6 @@
 import AppKit
 
-// km-dimmer — dimmer local (estilo HazeOver): escurece tudo que não é a janela em foco.
+// Kandela — dimmer local (estilo HazeOver): escurece tudo que não é a janela em foco.
 //
 // Técnica: uma janela preta translúcida por monitor, sempre ordenada logo ABAIXO
 // da janela frontal. Números de janela são globais no macOS, então dá para
@@ -59,6 +59,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     // MARK: ciclo de vida
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        migratePreferencesFromOldName()
         defaults.register(defaults: ["enabled": true, "intensity": 0.35, "appMode": false])
 
         buildOverlays()
@@ -147,12 +148,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         overlays.forEach { $0.order(.below, relativeTo: Int(target)) }
     }
 
+    /// Até 11/10/2026 o app se chamava km-dimmer, com o bundle id `br.com.kogut.km-dimmer`.
+    /// As preferências ficam guardadas pelo bundle id; na primeira abertura com o id novo,
+    /// copia as do antigo. O domínio antigo fica como está.
+    private func migratePreferencesFromOldName() {
+        let mark = "migratedFromOldName"
+        guard !defaults.bool(forKey: mark) else { return }
+        defer { defaults.set(true, forKey: mark) }
+        guard let old = defaults.persistentDomain(forName: "br.com.kogut.km-dimmer") else { return }
+        for key in ["enabled", "intensity", "appMode"] where defaults.object(forKey: key) == nil {
+            if let value = old[key] { defaults.set(value, forKey: key) }
+        }
+    }
+
     // MARK: menu na barra
 
     private func buildStatusItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let img = NSImage(systemSymbolName: "circle.lefthalf.filled",
-                             accessibilityDescription: "km-dimmer") {
+                             accessibilityDescription: "Kandela") {
             item.button?.image = img
         } else {
             item.button?.title = "◐"
@@ -192,7 +206,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(mode)
 
         menu.addItem(.separator())
-        let quit = NSMenuItem(title: "Sair do km-dimmer",
+        let quit = NSMenuItem(title: "Sair do Kandela",
                               action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         quit.target = NSApp
         menu.addItem(quit)
