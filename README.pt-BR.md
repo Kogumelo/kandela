@@ -7,6 +7,8 @@ Escurecedor de distrações local e minimalista para Mac (alternativa livre ao
 em foco. Feito em Swift/AppKit puro, ~250 linhas, sem dependências, sem
 permissões especiais (não pede Acessibilidade nem Gravação de Tela).
 
+![Kandela em ação: a janela em foco fica acesa, o resto escurece, e o menu da barra está aberto](Assets/screenshot-pt-BR.png)
+
 Parte da família de ferramentas da Kogumelo, que têm nome próprio começando
 por K (ver também o [Konfig](https://github.com/Kogumelo/konfig)). Chamava-se
 `km-dimmer` até 11/10/2026.
@@ -57,6 +59,18 @@ O ícone colorido do app também existe em SVG, em `Assets/kandela.svg`
 (para usar como logo do projeto em outros lugares).
 
 As versões usam a mesma geometria: mudou uma, mude as outras.
+
+## Imagem do README
+
+O overlay não aparece em capturas de tela (de propósito), então a imagem do
+topo é uma cena desenhada, com a marca e os textos reais do menu, por:
+
+```sh
+swift Tools/make-screenshot.swift
+```
+
+Ela gera `Assets/screenshot-en.png` e `Assets/screenshot-pt-BR.png`. Se o menu
+ou a marca mudarem, rode de novo.
 
 ## Traduções
 

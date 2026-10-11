@@ -7,6 +7,8 @@ A local, minimal distraction dimmer for the Mac (a free alternative to
 focus. Plain Swift/AppKit, ~250 lines, no dependencies, no special permissions
 (it asks for neither Accessibility nor Screen Recording).
 
+![Kandela at work: the focused window stays lit, everything else is dimmed, and the menu bar menu is open](Assets/screenshot-en.png)
+
 Part of Kogumelo's family of tools, each with its own name starting with K
 (see also [Konfig](https://github.com/Kogumelo/konfig)). It was called
 `km-dimmer` until 2026-10-11.
@@ -57,6 +59,18 @@ The full-color app icon is also available as SVG, in `Assets/kandela.svg`
 (to use as the project logo elsewhere).
 
 All versions share the same geometry: change one, change the others.
+
+## README image
+
+The overlay is left out of screen captures (on purpose), so the image at the
+top is a drawn scene, using the real mark and menu titles, made by:
+
+```sh
+swift Tools/make-screenshot.swift
+```
+
+It writes `Assets/screenshot-en.png` and `Assets/screenshot-pt-BR.png`. If the
+menu or the mark changes, run it again.
 
 ## Translations
 
