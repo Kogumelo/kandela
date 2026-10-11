@@ -1,22 +1,21 @@
 import AppKit
 
-// Kandela — escurecedor de distrações local (estilo HazeOver): escurece tudo que
-// não é a janela em foco.
+// Kandela — a local, minimal macOS menu bar app (in the spirit of HazeOver) that
+// dims everything except the focused window.
 //
-// Técnica: um véu, janela preta translúcida, por monitor, sempre ordenado logo
-// ABAIXO da janela frontal. Números de janela são globais no macOS, então dá para
-// posicionar o véu relativo a janelas de outros apps. Cliques atravessam o véu
-// (ignoresMouseEvents) e ele não aparece em capturas de tela (sharingType = .none).
-// Nenhuma permissão especial é necessária.
+// How it works: one translucent black window per display, the overlay, is always
+// ordered right BELOW the frontmost window. Window numbers are global on macOS, so
+// the overlay can be ordered relative to windows of other apps. Clicks pass through
+// it (ignoresMouseEvents) and it is left out of screenshots (sharingType = .none).
+// No special permission is needed.
 //
-// Convenção: nomes e comentários em português, como no resto da família K (Konfig,
-// Katraca). Ficam em inglês só a API da Apple e as chaves de preferência (`Chave`).
+// Code and comments are in English; only the user-facing menu titles are in Portuguese.
 
-// MARK: - Véu (janela de escurecimento)
+// MARK: - Overlay window
 
-final class Veu: NSWindow {
-    init(quadro: NSRect) {
-        super.init(contentRect: quadro,
+final class OverlayWindow: NSWindow {
+    init(screenFrame: NSRect) {
+        super.init(contentRect: screenFrame,
                    styleMask: .borderless,
                    backing: .buffered,
                    defer: false)
@@ -24,68 +23,68 @@ final class Veu: NSWindow {
         hasShadow = false
         backgroundColor = .black
         alphaValue = 0
-        ignoresMouseEvents = true          // cliques passam direto
+        ignoresMouseEvents = true          // clicks go straight through
         isReleasedWhenClosed = false
         animationBehavior = .none
-        sharingType = .none                // não aparece em capturas de tela
+        sharingType = .none                // left out of screenshots
         collectionBehavior = [.canJoinAllSpaces, .stationary,
                               .fullScreenAuxiliary, .ignoresCycle]
-        level = .normal                    // mesmo nível das janelas comuns:
-    }                                      // quem manda é a ordem relativa
+        level = .normal                    // same level as regular windows:
+    }                                      // what matters is the relative order
 
     override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
 }
 
-// MARK: - Marca (ícone da barra de menus)
+// MARK: - Mark (menu bar icon)
 
-// O K do Kandela, na grade 100×100 de Assets/kandela-mark.svg: janela de fundo
-// (bloco 72×40) com os três pontos do macOS vazados no alto à esquerda; a parte
-// dela à esquerda do vértice é a haste. Os braços ficam vazados (contorno 5)
-// dentro de um recorte de 10 no bloco. Imagem-modelo (template), então o macOS
-// pinta de preto ou branco conforme a barra.
-func bracosKandela(_ p: (CGFloat, CGFloat) -> NSPoint, raio r: CGFloat) -> NSBezierPath {
-    // Braços: 22 de largura na horizontal, cantos das pontas com raio 3;
-    // a ponta e o encaixe continuam vivos.
-    let bracos = NSBezierPath()
-    bracos.move(to: p(31.23, 50))
-    bracos.appendArc(from: p(55.57, 16), to: p(77.57, 16), radius: r)
-    bracos.appendArc(from: p(77.57, 16), to: p(53.23, 50), radius: r)
-    bracos.line(to: p(53.23, 50))
-    bracos.appendArc(from: p(77.57, 84), to: p(55.57, 84), radius: r)
-    bracos.appendArc(from: p(55.57, 84), to: p(31.23, 50), radius: r)
-    bracos.close()
-    bracos.lineJoinStyle = .round
-    return bracos
+// Kandela's K, on the 100×100 grid of Assets/kandela-mark.svg: a background window
+// (72×40 block) with the three macOS traffic-light dots cut out at the top left; the
+// part of it left of the vertex is the stem. The arms are hollow (5-wide outline)
+// inside a 10-wide cutout in the block. It is a template image, so macOS paints it
+// black or white to match the menu bar.
+func kandelaArms(_ p: (CGFloat, CGFloat) -> NSPoint, radius r: CGFloat) -> NSBezierPath {
+    // Arms: 22 wide horizontally, tip corners rounded with radius 3;
+    // the point and the joint stay sharp.
+    let arms = NSBezierPath()
+    arms.move(to: p(31.23, 50))
+    arms.appendArc(from: p(55.57, 16), to: p(77.57, 16), radius: r)
+    arms.appendArc(from: p(77.57, 16), to: p(53.23, 50), radius: r)
+    arms.line(to: p(53.23, 50))
+    arms.appendArc(from: p(77.57, 84), to: p(55.57, 84), radius: r)
+    arms.appendArc(from: p(55.57, 84), to: p(31.23, 50), radius: r)
+    arms.close()
+    arms.lineJoinStyle = .round
+    return arms
 }
 
-let pontosKandela: [CGFloat] = [18.5, 24.5, 30.5]   // centros dos pontos, em y = 36, raio 2,4
+let kandelaDots: [CGFloat] = [18.5, 24.5, 30.5]   // dot centers, at y = 36, radius 2.4
 
-func marcaKandela(tamanho: CGFloat) -> NSImage {
-    let img = NSImage(size: NSSize(width: tamanho, height: tamanho), flipped: true) { quadro in
-        let s = quadro.width / 100
+func kandelaMark(size: CGFloat) -> NSImage {
+    let img = NSImage(size: NSSize(width: size, height: size), flipped: true) { rect in
+        let s = rect.width / 100
         func p(_ x: CGFloat, _ y: CGFloat) -> NSPoint { NSPoint(x: x * s, y: y * s) }
         let ctx = NSGraphicsContext.current!
-        let bracos = bracosKandela(p, raio: 3 * s)
+        let arms = kandelaArms(p, radius: 3 * s)
 
         NSColor.black.setFill()
         NSBezierPath(roundedRect: NSRect(x: 14 * s, y: 30 * s, width: 72 * s, height: 40 * s),
                      xRadius: 4 * s, yRadius: 4 * s).fill()
 
-        // Recorte: braços engrossados (vão) e os três pontos.
+        // Cutout: thickened arms (the gap) and the three dots.
         ctx.compositingOperation = .destinationOut
-        bracos.lineWidth = 10 * s
-        bracos.fill()
-        bracos.stroke()
-        for cx in pontosKandela {
+        arms.lineWidth = 10 * s
+        arms.fill()
+        arms.stroke()
+        for cx in kandelaDots {
             NSBezierPath(ovalIn: NSRect(x: (cx - 2.4) * s, y: (36 - 2.4) * s,
                                         width: 4.8 * s, height: 4.8 * s)).fill()
         }
         ctx.compositingOperation = .sourceOver
 
         NSColor.black.setStroke()
-        bracos.lineWidth = 5 * s
-        bracos.stroke()
+        arms.lineWidth = 5 * s
+        arms.stroke()
         return true
     }
     img.isTemplate = true
@@ -93,222 +92,222 @@ func marcaKandela(tamanho: CGFloat) -> NSImage {
     return img
 }
 
-// MARK: - Preferências
+// MARK: - Preferences
 
-/// Chaves no `defaults` (domínio `br.com.kogut.kandela`). Os valores vêm do km-dimmer e
-/// ficam em inglês de propósito: mudá-los apagaria as preferências de quem já usa o app.
-enum Chave {
-    static let ativado = "enabled"
-    static let intensidade = "intensity"
-    static let modoApp = "appMode"
-    static let migrouDoNomeAntigo = "migratedFromOldName"
+/// Keys in `defaults` (domain `br.com.kogut.kandela`). They come from km-dimmer and must
+/// not change: renaming them would wipe the settings of existing users.
+enum PrefKey {
+    static let enabled = "enabled"
+    static let intensity = "intensity"
+    static let appMode = "appMode"
+    static let migratedFromOldName = "migratedFromOldName"
 }
 
-// MARK: - Delegado
+// MARK: - App delegate
 
-final class Delegado: NSObject, NSApplicationDelegate, NSMenuDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
-    private var itemBarra: NSStatusItem?
-    private var veus: [Veu] = []
-    private var relogio: Timer?
-    private var ultimoAlvo: CGWindowID = 0
+    private var statusItem: NSStatusItem?
+    private var overlays: [OverlayWindow] = []
+    private var timer: Timer?
+    private var lastTarget: CGWindowID = 0
 
-    private let padrao = UserDefaults.standard
-    private var ativado: Bool {
-        get { padrao.bool(forKey: Chave.ativado) }
-        set { padrao.set(newValue, forKey: Chave.ativado) }
+    private let defaults = UserDefaults.standard
+    private var enabled: Bool {
+        get { defaults.bool(forKey: PrefKey.enabled) }
+        set { defaults.set(newValue, forKey: PrefKey.enabled) }
     }
-    private var intensidade: Double {
-        get { padrao.double(forKey: Chave.intensidade) }
-        set { padrao.set(newValue, forKey: Chave.intensidade) }
+    private var intensity: Double {
+        get { defaults.double(forKey: PrefKey.intensity) }
+        set { defaults.set(newValue, forKey: PrefKey.intensity) }
     }
-    private var modoApp: Bool {            // true = todas as janelas do app em foco ficam claras
-        get { padrao.bool(forKey: Chave.modoApp) }
-        set { padrao.set(newValue, forKey: Chave.modoApp) }
+    private var appMode: Bool {            // true = every window of the focused app stays lit
+        get { defaults.bool(forKey: PrefKey.appMode) }
+        set { defaults.set(newValue, forKey: PrefKey.appMode) }
     }
 
-    // MARK: ciclo de vida
+    // MARK: lifecycle
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        migrarPreferenciasDoNomeAntigo()
-        padrao.register(defaults: [Chave.ativado: true, Chave.intensidade: 0.35, Chave.modoApp: false])
+        migratePreferencesFromOldName()
+        defaults.register(defaults: [PrefKey.enabled: true, PrefKey.intensity: 0.35, PrefKey.appMode: false])
 
-        montarVeus()
-        montarItemBarra()
+        buildOverlays()
+        buildStatusItem()
 
         NotificationCenter.default.addObserver(
-            self, selector: #selector(telasMudaram),
+            self, selector: #selector(screensChanged),
             name: NSApplication.didChangeScreenParametersNotification, object: nil)
         NSWorkspace.shared.notificationCenter.addObserver(
-            self, selector: #selector(focoMudou),
+            self, selector: #selector(focusChanged),
             name: NSWorkspace.didActivateApplicationNotification, object: nil)
 
-        // O relógio cobre trocas de janela dentro do mesmo app (sem precisar de
-        // permissão de Acessibilidade). Custo de CPU: desprezível.
-        let r = Timer(timeInterval: 0.2, target: self,
-                      selector: #selector(pulso), userInfo: nil, repeats: true)
-        RunLoop.main.add(r, forMode: .common)
-        relogio = r
+        // The timer catches window switches within the same app (without needing the
+        // Accessibility permission). CPU cost: negligible.
+        let t = Timer(timeInterval: 0.2, target: self,
+                      selector: #selector(tick), userInfo: nil, repeats: true)
+        RunLoop.main.add(t, forMode: .common)
+        timer = t
 
-        aplicarIntensidade(animado: true)
-        reordenar(forcado: true)
+        applyIntensity(animated: true)
+        updateOrdering(force: true)
     }
 
-    // MARK: véus
+    // MARK: overlays
 
-    private func montarVeus() {
-        veus.forEach { $0.orderOut(nil) }
-        veus = NSScreen.screens.map { Veu(quadro: $0.frame) }
-        ultimoAlvo = 0
+    private func buildOverlays() {
+        overlays.forEach { $0.orderOut(nil) }
+        overlays = NSScreen.screens.map { OverlayWindow(screenFrame: $0.frame) }
+        lastTarget = 0
     }
 
-    private func aplicarIntensidade(animado: Bool) {
-        let alvo = ativado ? CGFloat(intensidade) : 0
+    private func applyIntensity(animated: Bool) {
+        let target = enabled ? CGFloat(intensity) : 0
         NSAnimationContext.runAnimationGroup { ctx in
-            ctx.duration = animado ? 0.25 : 0
-            veus.forEach { $0.animator().alphaValue = alvo }
+            ctx.duration = animated ? 0.25 : 0
+            overlays.forEach { $0.animator().alphaValue = target }
         }
     }
 
-    @objc private func telasMudaram() {
-        montarVeus()
-        aplicarIntensidade(animado: false)
-        reordenar(forcado: true)
+    @objc private func screensChanged() {
+        buildOverlays()
+        applyIntensity(animated: false)
+        updateOrdering(force: true)
     }
 
-    @objc private func focoMudou() { reordenar(forcado: true) }
-    @objc private func pulso() { reordenar(forcado: false) }
+    @objc private func focusChanged() { updateOrdering(force: true) }
+    @objc private func tick() { updateOrdering(force: false) }
 
-    /// Reposiciona os véus logo abaixo da janela do app em primeiro plano.
-    private func reordenar(forcado: Bool) {
-        guard ativado else { return }
-        guard let lista = CGWindowListCopyWindowInfo(
+    /// Moves the overlays right below the window of the frontmost app.
+    private func updateOrdering(force: Bool) {
+        guard enabled else { return }
+        guard let list = CGWindowListCopyWindowInfo(
                 [.optionOnScreenOnly, .excludeDesktopElements],
                 kCGNullWindowID) as? [[String: Any]] else { return }
 
-        let meuPID = pid_t(ProcessInfo.processInfo.processIdentifier)
-        let pidFrente = NSWorkspace.shared.frontmostApplication?.processIdentifier
+        let myPID = pid_t(ProcessInfo.processInfo.processIdentifier)
+        let frontPID = NSWorkspace.shared.frontmostApplication?.processIdentifier
 
-        // A lista vem ordenada da frente para trás.
-        var alvo: CGWindowID = 0
-        for info in lista {
+        // The list is ordered front to back.
+        var target: CGWindowID = 0
+        for info in list {
             guard (info[kCGWindowLayer as String] as? NSNumber)?.intValue == 0,
                   let pid = (info[kCGWindowOwnerPID as String] as? NSNumber)?.int32Value,
-                  pid != meuPID,
-                  let numero = (info[kCGWindowNumber as String] as? NSNumber)?.uint32Value
+                  pid != myPID,
+                  let num = (info[kCGWindowNumber as String] as? NSNumber)?.uint32Value
             else { continue }
-            if let alfa = (info[kCGWindowAlpha as String] as? NSNumber)?.doubleValue,
-               alfa == 0 { continue }                        // janelas invisíveis
+            if let alpha = (info[kCGWindowAlpha as String] as? NSNumber)?.doubleValue,
+               alpha == 0 { continue }                       // invisible windows
             if let b = info[kCGWindowBounds as String] as? [String: Any],
-               let ret = CGRect(dictionaryRepresentation: b as CFDictionary),
-               ret.width < 50 || ret.height < 50 { continue }  // janelas auxiliares minúsculas
-            if let pidFrente, pid != pidFrente { continue }  // só janelas do app em foco
-            alvo = numero         // sem modoApp: a mais à frente e para;
-            if !modoApp { break } // com modoApp: continua até a mais atrás do app
+               let rect = CGRect(dictionaryRepresentation: b as CFDictionary),
+               rect.width < 50 || rect.height < 50 { continue } // tiny helper windows
+            if let frontPID, pid != frontPID { continue }    // only the focused app's windows
+            target = num          // without appMode: the frontmost one, then stop;
+            if !appMode { break } // with appMode: keep going to the app's rearmost one
         }
 
-        if alvo == 0 {            // nada em foco (ex.: mesa) → não escurece
-            if ultimoAlvo != 0 || forcado {
-                veus.forEach { $0.orderOut(nil) }
-                ultimoAlvo = 0
+        if target == 0 {          // nothing focused (e.g. the desktop) → don't dim
+            if lastTarget != 0 || force {
+                overlays.forEach { $0.orderOut(nil) }
+                lastTarget = 0
             }
             return
         }
-        guard forcado || alvo != ultimoAlvo else { return }
-        ultimoAlvo = alvo
-        veus.forEach { $0.order(.below, relativeTo: Int(alvo)) }
+        guard force || target != lastTarget else { return }
+        lastTarget = target
+        overlays.forEach { $0.order(.below, relativeTo: Int(target)) }
     }
 
-    /// Até 11/10/2026 o app se chamava km-dimmer, com o bundle id `br.com.kogut.km-dimmer`.
-    /// As preferências ficam guardadas pelo bundle id; na primeira abertura com o id novo,
-    /// copia as do antigo. O domínio antigo fica como está.
-    private func migrarPreferenciasDoNomeAntigo() {
-        guard !padrao.bool(forKey: Chave.migrouDoNomeAntigo) else { return }
-        defer { padrao.set(true, forKey: Chave.migrouDoNomeAntigo) }
-        guard let antigas = padrao.persistentDomain(forName: "br.com.kogut.km-dimmer") else { return }
-        for chave in [Chave.ativado, Chave.intensidade, Chave.modoApp] where padrao.object(forKey: chave) == nil {
-            if let valor = antigas[chave] { padrao.set(valor, forKey: chave) }
+    /// Until 2026-10-11 the app was called km-dimmer, with bundle id `br.com.kogut.km-dimmer`.
+    /// Preferences are stored per bundle id; on the first launch under the new id, copy the
+    /// old ones over. The old domain is left untouched.
+    private func migratePreferencesFromOldName() {
+        guard !defaults.bool(forKey: PrefKey.migratedFromOldName) else { return }
+        defer { defaults.set(true, forKey: PrefKey.migratedFromOldName) }
+        guard let old = defaults.persistentDomain(forName: "br.com.kogut.km-dimmer") else { return }
+        for key in [PrefKey.enabled, PrefKey.intensity, PrefKey.appMode] where defaults.object(forKey: key) == nil {
+            if let value = old[key] { defaults.set(value, forKey: key) }
         }
     }
 
-    // MARK: menu na barra
+    // MARK: menu bar menu
 
-    private func montarItemBarra() {
+    private func buildStatusItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        item.button?.image = marcaKandela(tamanho: 18)
+        item.button?.image = kandelaMark(size: 18)
         let menu = NSMenu()
         menu.delegate = self
         menu.autoenablesItems = false
         item.menu = menu
-        itemBarra = item
+        statusItem = item
     }
 
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
 
-        let liga = NSMenuItem(title: "Ativado", action: #selector(alternarAtivado), keyEquivalent: "")
-        liga.target = self
-        liga.state = ativado ? .on : .off
-        menu.addItem(liga)
+        let toggle = NSMenuItem(title: "Ativado", action: #selector(toggleEnabled), keyEquivalent: "")
+        toggle.target = self
+        toggle.state = enabled ? .on : .off
+        menu.addItem(toggle)
 
         menu.addItem(.separator())
-        let titulo = NSMenuItem(title: "Intensidade", action: nil, keyEquivalent: "")
-        titulo.isEnabled = false
-        menu.addItem(titulo)
+        let header = NSMenuItem(title: "Intensidade", action: nil, keyEquivalent: "")
+        header.isEnabled = false
+        menu.addItem(header)
         for pct in [20, 35, 50, 65, 80] {
-            let i = NSMenuItem(title: "\(pct)%", action: #selector(escolherIntensidade(_:)), keyEquivalent: "")
-            i.target = self
-            i.tag = pct
-            i.state = Int((intensidade * 100).rounded()) == pct ? .on : .off
-            menu.addItem(i)
+            let mi = NSMenuItem(title: "\(pct)%", action: #selector(setIntensity(_:)), keyEquivalent: "")
+            mi.target = self
+            mi.tag = pct
+            mi.state = Int((intensity * 100).rounded()) == pct ? .on : .off
+            menu.addItem(mi)
         }
 
         menu.addItem(.separator())
-        let modo = NSMenuItem(title: "Destacar todas as janelas do app",
-                              action: #selector(alternarModoApp), keyEquivalent: "")
-        modo.target = self
-        modo.state = modoApp ? .on : .off
-        menu.addItem(modo)
+        let mode = NSMenuItem(title: "Destacar todas as janelas do app",
+                              action: #selector(toggleAppMode), keyEquivalent: "")
+        mode.target = self
+        mode.state = appMode ? .on : .off
+        menu.addItem(mode)
 
         menu.addItem(.separator())
-        let sair = NSMenuItem(title: "Sair do Kandela",
+        let quit = NSMenuItem(title: "Sair do Kandela",
                               action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
-        sair.target = NSApp
-        menu.addItem(sair)
+        quit.target = NSApp
+        menu.addItem(quit)
     }
 
-    // MARK: ações
+    // MARK: actions
 
-    @objc private func alternarAtivado() {
-        ativado.toggle()
-        aplicarIntensidade(animado: true)
-        if ativado {
-            reordenar(forcado: true)
+    @objc private func toggleEnabled() {
+        enabled.toggle()
+        applyIntensity(animated: true)
+        if enabled {
+            updateOrdering(force: true)
         } else {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-                guard let self, !self.ativado else { return }
-                self.veus.forEach { $0.orderOut(nil) }
-                self.ultimoAlvo = 0
+                guard let self, !self.enabled else { return }
+                self.overlays.forEach { $0.orderOut(nil) }
+                self.lastTarget = 0
             }
         }
     }
 
-    @objc private func escolherIntensidade(_ item: NSMenuItem) {
-        intensidade = Double(item.tag) / 100.0
-        aplicarIntensidade(animado: true)
-        reordenar(forcado: true)
+    @objc private func setIntensity(_ sender: NSMenuItem) {
+        intensity = Double(sender.tag) / 100.0
+        applyIntensity(animated: true)
+        updateOrdering(force: true)
     }
 
-    @objc private func alternarModoApp() {
-        modoApp.toggle()
-        reordenar(forcado: true)
+    @objc private func toggleAppMode() {
+        appMode.toggle()
+        updateOrdering(force: true)
     }
 }
 
-// MARK: - Partida
+// MARK: - Bootstrap
 
 let app = NSApplication.shared
-let delegado = Delegado()
-app.delegate = delegado
-app.setActivationPolicy(.accessory)   // sem ícone no Dock, só na barra de menus
+let delegate = AppDelegate()
+app.delegate = delegate
+app.setActivationPolicy(.accessory)   // no Dock icon, menu bar only
 app.run()
