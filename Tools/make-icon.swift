@@ -30,8 +30,9 @@ func drawIcon(px: Int) -> Data {
     grad.draw(in: tile, relativeCenterPosition: NSPoint(x: -0.4, y: 0.6))
     NSGraphicsContext.restoreGraphicsState()
 
-    // Marca: grade 100×100 ocupando 66% do quadrado, centralizada.
-    let side = 824 * 0.66 * k
+    // Marca: grade 100×100 em 98,43% do quadrado (o K, de 16 a 84 na grade,
+    // fica a 1/6 da placa de cada borda em cima e embaixo), centralizada.
+    let side = 824 * 0.9843 * k
     let ox = tile.midX - side / 2, oy = tile.midY - side / 2
     let s = side / 100
     func p(_ x: CGFloat, _ y: CGFloat) -> NSPoint { NSPoint(x: ox + x * s, y: oy + (100 - y) * s) }
