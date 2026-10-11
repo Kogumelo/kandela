@@ -36,27 +36,23 @@ func drawIcon(px: Int) -> Data {
     let s = side / 100
     func p(_ x: CGFloat, _ y: CGFloat) -> NSPoint { NSPoint(x: ox + x * s, y: oy + (100 - y) * s) }
 
-    let stem = NSBezierPath(roundedRect: NSRect(x: ox + 23.59 * s, y: oy + 16 * s,
+    let r = 3 * s
+    let stem = NSBezierPath(roundedRect: NSRect(x: ox + 22.43 * s, y: oy + 16 * s,
                                                 width: 22 * s, height: 68 * s),
-                            xRadius: 3 * s, yRadius: 3 * s)
+                            xRadius: r, yRadius: r)
     rgb(0x7f8db8).setFill()
     stem.fill()
 
     let arms = NSBezierPath()
-    arms.move(to: p(32.39, 50))
-    for (x, y) in [(56.73, 16.0), (76.41, 16), (52.07, 50), (76.41, 84), (56.73, 84)] {
-        arms.line(to: p(CGFloat(x), CGFloat(y)))
-    }
+    arms.move(to: p(31.23, 50))
+    arms.appendArc(from: p(55.57, 16), to: p(77.57, 16), radius: r)
+    arms.appendArc(from: p(77.57, 16), to: p(53.23, 50), radius: r)
+    arms.line(to: p(53.23, 50))
+    arms.appendArc(from: p(77.57, 84), to: p(55.57, 84), radius: r)
+    arms.appendArc(from: p(55.57, 84), to: p(31.23, 50), radius: r)
     arms.close()
-    let glow = NSShadow()
-    glow.shadowColor = NSColor(srgbRed: 1, green: 0.85, blue: 0.63, alpha: 0.3)
-    glow.shadowBlurRadius = 28 * k
-    glow.shadowOffset = .zero
-    NSGraphicsContext.saveGraphicsState()
-    glow.set()
     rgb(0xfff3dc).setFill()
     arms.fill()
-    NSGraphicsContext.restoreGraphicsState()
 
     ctx.flushGraphics()
     NSGraphicsContext.restoreGraphicsState()
