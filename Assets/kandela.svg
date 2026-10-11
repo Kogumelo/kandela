@@ -1,14 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="1024" height="1024">
   <!-- Ícone do Kandela, igual ao Resources/AppIcon.icns (gerado por Tools/make-icon.swift).
        Placa no gabarito do macOS (84 de lado dentro de 100, raio 19).
-       Marca de Assets/kandela-mark.svg reduzida a 66% da placa (escala 0,5544), centralizada. -->
+       Marca de Assets/kandela-mark.svg na escala 0,8268, centralizada: o K tem 56,2 de altura
+       e fica a 13,9 da borda da placa em cima e embaixo (19,2 dos lados). -->
   <defs>
     <radialGradient id="placa" cx=".3" cy=".2" r="1.2">
       <stop offset="0" stop-color="#2a3350"/><stop offset=".7" stop-color="#0d1020"/>
     </radialGradient>
   </defs>
   <rect x="8" y="8" width="84" height="84" rx="19" fill="url(#placa)"/>
-  <g transform="translate(22.28 22.28) scale(.5544)">
+  <g transform="translate(8.66 8.66) scale(.8268)">
     <rect x="22.43" y="16" width="22" height="68" rx="3" fill="#7f8db8"/>
     <path d="M31.23 50 L54.67 17.25 A3 3 0 0 1 57.11 16 L71.73 16 A3 3 0 0 1 74.17 20.75 L53.23 50 L74.17 79.25 A3 3 0 0 1 71.73 84 L57.11 84 A3 3 0 0 1 54.67 82.75 Z" fill="#fff3dc"/>
   </g>
