@@ -49,7 +49,10 @@ A marca (um K: haste apagada atrás, braços acesos por cima) está em
 swift Tools/make-icon.swift
 ```
 
-As três versões usam a mesma geometria: mudou uma, mude as outras.
+O ícone colorido do app também existe em SVG, em `Assets/kandela.svg`
+(para usar como logo do projeto em outros lugares).
+
+As versões usam a mesma geometria: mudou uma, mude as outras.
 
 ## Iniciar junto com o sistema
 
