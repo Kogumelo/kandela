@@ -1,14 +1,18 @@
 import AppKit
 
-// Kandela — dimmer local (estilo HazeOver): escurece tudo que não é a janela em foco.
+// Kandela — a local, minimal macOS menu bar app (in the spirit of HazeOver) that
+// dims everything except the focused window.
 //
-// Técnica: uma janela preta translúcida por monitor, sempre ordenada logo ABAIXO
-// da janela frontal. Números de janela são globais no macOS, então dá para
-// posicionar nossa janela relativa a janelas de outros apps. Cliques atravessam
-// o overlay (ignoresMouseEvents) e ele não aparece em capturas de tela
-// (sharingType = .none). Nenhuma permissão especial é necessária.
+// How it works: one translucent black window per display, the overlay, is always
+// ordered right BELOW the frontmost window. Window numbers are global on macOS, so
+// the overlay can be ordered relative to windows of other apps. Clicks pass through
+// it (ignoresMouseEvents) and it is left out of screenshots (sharingType = .none).
+// No special permission is needed.
+//
+// Code and comments are in English. Menu titles are localized: the English text is the
+// key, and Resources/<lang>.lproj/Localizable.strings holds the translations.
 
-// MARK: - Janela de escurecimento (overlay)
+// MARK: - Overlay window
 
 final class OverlayWindow: NSWindow {
     init(screenFrame: NSRect) {
@@ -20,29 +24,29 @@ final class OverlayWindow: NSWindow {
         hasShadow = false
         backgroundColor = .black
         alphaValue = 0
-        ignoresMouseEvents = true          // cliques passam direto
+        ignoresMouseEvents = true          // clicks go straight through
         isReleasedWhenClosed = false
         animationBehavior = .none
-        sharingType = .none                // não aparece em capturas de tela
+        sharingType = .none                // left out of screenshots
         collectionBehavior = [.canJoinAllSpaces, .stationary,
                               .fullScreenAuxiliary, .ignoresCycle]
-        level = .normal                    // mesmo nível das janelas comuns:
-    }                                      // quem manda é a ordem relativa
+        level = .normal                    // same level as regular windows:
+    }                                      // what matters is the relative order
 
     override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
 }
 
-// MARK: - Marca (ícone da barra de menus)
+// MARK: - Mark (menu bar icon)
 
-// O K do Kandela, na grade 100×100 de Assets/kandela-mark.svg: janela de fundo
-// (bloco 72×40) com os três pontos do macOS vazados no alto à esquerda; a parte
-// dela à esquerda do vértice é a haste. Os braços ficam vazados (contorno 5)
-// dentro de um recorte de 10 no bloco. Imagem-modelo (template), então o macOS
-// pinta de preto ou branco conforme a barra.
+// Kandela's K, on the 100×100 grid of Assets/kandela-mark.svg: a background window
+// (72×40 block) with the three macOS traffic-light dots cut out at the top left; the
+// part of it left of the vertex is the stem. The arms are hollow (5-wide outline)
+// inside a 10-wide cutout in the block. It is a template image, so macOS paints it
+// black or white to match the menu bar.
 func kandelaArms(_ p: (CGFloat, CGFloat) -> NSPoint, radius r: CGFloat) -> NSBezierPath {
-    // Braços: 22 de largura na horizontal, cantos das pontas com raio 3;
-    // a ponta e o encaixe continuam vivos.
+    // Arms: 22 wide horizontally, tip corners rounded with radius 3;
+    // the point and the joint stay sharp.
     let arms = NSBezierPath()
     arms.move(to: p(31.23, 50))
     arms.appendArc(from: p(55.57, 16), to: p(77.57, 16), radius: r)
@@ -55,7 +59,7 @@ func kandelaArms(_ p: (CGFloat, CGFloat) -> NSPoint, radius r: CGFloat) -> NSBez
     return arms
 }
 
-let kandelaDots: [CGFloat] = [18.5, 24.5, 30.5]   // centros dos pontos, em y = 36, raio 2,4
+let kandelaDots: [CGFloat] = [18.5, 24.5, 30.5]   // dot centers, at y = 36, radius 2.4
 
 func kandelaMark(size: CGFloat) -> NSImage {
     let img = NSImage(size: NSSize(width: size, height: size), flipped: true) { rect in
@@ -68,7 +72,7 @@ func kandelaMark(size: CGFloat) -> NSImage {
         NSBezierPath(roundedRect: NSRect(x: 14 * s, y: 30 * s, width: 72 * s, height: 40 * s),
                      xRadius: 4 * s, yRadius: 4 * s).fill()
 
-        // Recorte: braços engrossados (vão) e os três pontos.
+        // Cutout: thickened arms (the gap) and the three dots.
         ctx.compositingOperation = .destinationOut
         arms.lineWidth = 10 * s
         arms.fill()
@@ -89,7 +93,18 @@ func kandelaMark(size: CGFloat) -> NSImage {
     return img
 }
 
-// MARK: - Delegate principal
+// MARK: - Preferences
+
+/// Keys in `defaults` (domain `br.com.kogut.kandela`). They come from km-dimmer and must
+/// not change: renaming them would wipe the settings of existing users.
+enum PrefKey {
+    static let enabled = "enabled"
+    static let intensity = "intensity"
+    static let appMode = "appMode"
+    static let migratedFromOldName = "migratedFromOldName"
+}
+
+// MARK: - App delegate
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
@@ -100,23 +115,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private let defaults = UserDefaults.standard
     private var enabled: Bool {
-        get { defaults.bool(forKey: "enabled") }
-        set { defaults.set(newValue, forKey: "enabled") }
+        get { defaults.bool(forKey: PrefKey.enabled) }
+        set { defaults.set(newValue, forKey: PrefKey.enabled) }
     }
     private var intensity: Double {
-        get { defaults.double(forKey: "intensity") }
-        set { defaults.set(newValue, forKey: "intensity") }
+        get { defaults.double(forKey: PrefKey.intensity) }
+        set { defaults.set(newValue, forKey: PrefKey.intensity) }
     }
-    private var appMode: Bool {            // true = todas as janelas do app em foco ficam claras
-        get { defaults.bool(forKey: "appMode") }
-        set { defaults.set(newValue, forKey: "appMode") }
+    private var appMode: Bool {            // true = every window of the focused app stays lit
+        get { defaults.bool(forKey: PrefKey.appMode) }
+        set { defaults.set(newValue, forKey: PrefKey.appMode) }
     }
 
-    // MARK: ciclo de vida
+    // MARK: lifecycle
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         migratePreferencesFromOldName()
-        defaults.register(defaults: ["enabled": true, "intensity": 0.35, "appMode": false])
+        defaults.register(defaults: [PrefKey.enabled: true, PrefKey.intensity: 0.35, PrefKey.appMode: false])
 
         buildOverlays()
         buildStatusItem()
@@ -128,8 +143,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             self, selector: #selector(focusChanged),
             name: NSWorkspace.didActivateApplicationNotification, object: nil)
 
-        // O timer cobre trocas de janela dentro do mesmo app (sem precisar de
-        // permissão de Acessibilidade). Custo de CPU: desprezível.
+        // The timer catches window switches within the same app (without needing the
+        // Accessibility permission). CPU cost: negligible.
         let t = Timer(timeInterval: 0.2, target: self,
                       selector: #selector(tick), userInfo: nil, repeats: true)
         RunLoop.main.add(t, forMode: .common)
@@ -164,7 +179,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func focusChanged() { updateOrdering(force: true) }
     @objc private func tick() { updateOrdering(force: false) }
 
-    /// Reposiciona os overlays logo abaixo da janela do app em primeiro plano.
+    /// Moves the overlays right below the window of the frontmost app.
     private func updateOrdering(force: Bool) {
         guard enabled else { return }
         guard let list = CGWindowListCopyWindowInfo(
@@ -174,7 +189,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let myPID = pid_t(ProcessInfo.processInfo.processIdentifier)
         let frontPID = NSWorkspace.shared.frontmostApplication?.processIdentifier
 
-        // A lista vem ordenada da frente para trás.
+        // The list is ordered front to back.
         var target: CGWindowID = 0
         for info in list {
             guard (info[kCGWindowLayer as String] as? NSNumber)?.intValue == 0,
@@ -183,16 +198,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                   let num = (info[kCGWindowNumber as String] as? NSNumber)?.uint32Value
             else { continue }
             if let alpha = (info[kCGWindowAlpha as String] as? NSNumber)?.doubleValue,
-               alpha == 0 { continue }                       // janelas invisíveis
+               alpha == 0 { continue }                       // invisible windows
             if let b = info[kCGWindowBounds as String] as? [String: Any],
                let rect = CGRect(dictionaryRepresentation: b as CFDictionary),
-               rect.width < 50 || rect.height < 50 { continue } // janelas auxiliares minúsculas
-            if let frontPID, pid != frontPID { continue }    // só janelas do app em foco
-            target = num          // sem appMode: a mais à frente e para;
-            if !appMode { break } // com appMode: continua até a mais atrás do app
+               rect.width < 50 || rect.height < 50 { continue } // tiny helper windows
+            if let frontPID, pid != frontPID { continue }    // only the focused app's windows
+            target = num          // without appMode: the frontmost one, then stop;
+            if !appMode { break } // with appMode: keep going to the app's rearmost one
         }
 
-        if target == 0 {          // nada em foco (ex.: desktop) → não escurece
+        if target == 0 {          // nothing focused (e.g. the desktop) → don't dim
             if lastTarget != 0 || force {
                 overlays.forEach { $0.orderOut(nil) }
                 lastTarget = 0
@@ -204,20 +219,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         overlays.forEach { $0.order(.below, relativeTo: Int(target)) }
     }
 
-    /// Até 11/10/2026 o app se chamava km-dimmer, com o bundle id `br.com.kogut.km-dimmer`.
-    /// As preferências ficam guardadas pelo bundle id; na primeira abertura com o id novo,
-    /// copia as do antigo. O domínio antigo fica como está.
+    /// Until 2026-10-11 the app was called km-dimmer, with bundle id `br.com.kogut.km-dimmer`.
+    /// Preferences are stored per bundle id; on the first launch under the new id, copy the
+    /// old ones over. The old domain is left untouched.
     private func migratePreferencesFromOldName() {
-        let mark = "migratedFromOldName"
-        guard !defaults.bool(forKey: mark) else { return }
-        defer { defaults.set(true, forKey: mark) }
+        guard !defaults.bool(forKey: PrefKey.migratedFromOldName) else { return }
+        defer { defaults.set(true, forKey: PrefKey.migratedFromOldName) }
         guard let old = defaults.persistentDomain(forName: "br.com.kogut.km-dimmer") else { return }
-        for key in ["enabled", "intensity", "appMode"] where defaults.object(forKey: key) == nil {
+        for key in [PrefKey.enabled, PrefKey.intensity, PrefKey.appMode] where defaults.object(forKey: key) == nil {
             if let value = old[key] { defaults.set(value, forKey: key) }
         }
     }
 
-    // MARK: menu na barra
+    // MARK: menu bar menu
 
     private func buildStatusItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -232,13 +246,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
 
-        let toggle = NSMenuItem(title: "Ativado", action: #selector(toggleEnabled), keyEquivalent: "")
+        let toggle = NSMenuItem(title: NSLocalizedString("Enabled", comment: "Menu item: turns dimming on/off"),
+                                action: #selector(toggleEnabled), keyEquivalent: "")
         toggle.target = self
         toggle.state = enabled ? .on : .off
         menu.addItem(toggle)
 
         menu.addItem(.separator())
-        let header = NSMenuItem(title: "Intensidade", action: nil, keyEquivalent: "")
+        let header = NSMenuItem(title: NSLocalizedString("Intensity", comment: "Menu header above the percentages"),
+                                action: nil, keyEquivalent: "")
         header.isEnabled = false
         menu.addItem(header)
         for pct in [20, 35, 50, 65, 80] {
@@ -250,20 +266,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
 
         menu.addItem(.separator())
-        let mode = NSMenuItem(title: "Destacar todas as janelas do app",
+        let mode = NSMenuItem(title: NSLocalizedString("Highlight All App Windows",
+                                                        comment: "Menu item: keep every window of the focused app lit"),
                               action: #selector(toggleAppMode), keyEquivalent: "")
         mode.target = self
         mode.state = appMode ? .on : .off
         menu.addItem(mode)
 
         menu.addItem(.separator())
-        let quit = NSMenuItem(title: "Sair do Kandela",
+        let quit = NSMenuItem(title: NSLocalizedString("Quit Kandela", comment: "Menu item"),
                               action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         quit.target = NSApp
         menu.addItem(quit)
     }
 
-    // MARK: ações
+    // MARK: actions
 
     @objc private func toggleEnabled() {
         enabled.toggle()
@@ -296,5 +313,5 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 let app = NSApplication.shared
 let delegate = AppDelegate()
 app.delegate = delegate
-app.setActivationPolicy(.accessory)   // sem ícone no Dock, só na barra de menus
+app.setActivationPolicy(.accessory)   // no Dock icon, menu bar only
 app.run()

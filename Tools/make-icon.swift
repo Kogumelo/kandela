@@ -1,6 +1,6 @@
-// Gera Resources/AppIcon.icns a partir da marca (mesma geometria de
-// Assets/kandela-mark.svg e de kandelaMark() em Sources/main.swift).
-// Uso: swift Tools/make-icon.swift   (na raiz do projeto)
+// Builds Resources/AppIcon.icns from the mark (same geometry as
+// Assets/kandela-mark.svg and kandelaMark(size:) in Sources/main.swift).
+// Usage: swift Tools/make-icon.swift   (from the project root)
 import AppKit
 
 func rgb(_ hex: UInt32) -> NSColor {
@@ -17,21 +17,21 @@ func drawIcon(px: Int) -> Data {
     NSGraphicsContext.saveGraphicsState()
     let ctx = NSGraphicsContext(bitmapImageRep: rep)!
     NSGraphicsContext.current = ctx
-    let k = CGFloat(px) / 1024   // tudo desenhado numa tela de 1024
+    let k = CGFloat(px) / 1024   // everything is drawn on a 1024 canvas
 
-    // Fundo: quadrado de cantos arredondados de 824, grade padrão do macOS.
+    // Background: 824 rounded square, the standard macOS icon grid.
     let tile = NSRect(x: 100 * k, y: 100 * k, width: 824 * k, height: 824 * k)
     let shape = NSBezierPath(roundedRect: tile, xRadius: 185 * k, yRadius: 185 * k)
     NSGraphicsContext.saveGraphicsState()
     shape.addClip()
     let grad = NSGradient(colors: [rgb(0x2a3350), rgb(0x0d1020)], atLocations: [0, 0.7],
                           colorSpace: .sRGB)!
-    // centro do degradê em (30%, 20%) a partir do topo
+    // gradient center at (30%, 20%) from the top
     grad.draw(in: tile, relativeCenterPosition: NSPoint(x: -0.4, y: 0.6))
     NSGraphicsContext.restoreGraphicsState()
 
-    // Marca: grade 100×100 em 98,43% do quadrado (o K, de 16 a 84 na grade,
-    // fica a 1/6 da placa de cada borda em cima e embaixo), centralizada.
+    // Mark: 100×100 grid at 98.43% of the square (the K, from 16 to 84 on the grid,
+    // sits 1/6 of the tile from the top and bottom edges), centered.
     let side = 824 * 0.9843 * k
     let ox = tile.midX - side / 2, oy = tile.midY - side / 2
     let s = side / 100
@@ -48,8 +48,8 @@ func drawIcon(px: Int) -> Data {
     arms.close()
     arms.lineJoinStyle = .round
 
-    // Janela de fundo apagada (55%) numa camada própria, para o recorte dos
-    // braços (vão de 2,5) e dos três pontos não apagar a placa por baixo.
+    // Dimmed background window (55%) in its own layer, so that cutting out the
+    // arms (2.5 gap) and the three dots does not erase the tile underneath.
     let cg = ctx.cgContext
     cg.beginTransparencyLayer(auxiliaryInfo: nil)
     rgb(0x7f8db8).withAlphaComponent(0.55).setFill()
@@ -90,5 +90,5 @@ task.arguments = ["-c", "icns", iconset.path, "-o", "Resources/AppIcon.icns"]
 try task.run()
 task.waitUntilExit()
 try? fm.removeItem(at: iconset)
-guard task.terminationStatus == 0 else { fatalError("iconutil falhou") }
+guard task.terminationStatus == 0 else { fatalError("iconutil failed") }
 print("OK: Resources/AppIcon.icns")

@@ -1,0 +1,13 @@
+/* Português (Brasil). Keys are the English text used in Sources/main.swift. */
+
+/* Menu item: turns dimming on/off */
+"Enabled" = "Ativado";
+
+/* Menu header above the percentages */
+"Intensity" = "Intensidade";
+
+/* Menu item: keep every window of the focused app lit */
+"Highlight All App Windows" = "Destacar todas as janelas do app";
+
+/* Menu item */
+"Quit Kandela" = "Sair do Kandela";
