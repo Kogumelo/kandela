@@ -1,14 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <!-- Kandela: janela de fundo (bloco 72×40, raio 4) com os três pontos do macOS
-       no alto à esquerda; a parte dela à esquerda do vértice é a haste do K.
-       Os braços ficam vazados (contorno 5) dentro de um recorte de 10 no bloco. -->
+  <!-- Kandela: two rounded rectangles side by side, both from y 25 to 75. On the left the
+       background window (x 8 to 52, radius 7) in a 5-wide outline with the three macOS
+       dots; on the right a solid block (x 55 to 92, radius 4) whose left side is a point
+       reaching x 36, inside the window. A 3-wide gap is cut around the block.
+       Dark ink on light backgrounds, light ink on dark ones. -->
+  <style>
+    .ink { fill: #14182c; stroke: #14182c }
+    @media (prefers-color-scheme: dark) { .ink { fill: #ffffff; stroke: #ffffff } }
+  </style>
   <defs>
-    <mask id="corte">
-      <rect width="100" height="100" fill="#fff"/>
-      <path d="M31.23 50 L54.67 17.25 A3 3 0 0 1 57.11 16 L71.73 16 A3 3 0 0 1 74.17 20.75 L53.23 50 L74.17 79.25 A3 3 0 0 1 71.73 84 L57.11 84 A3 3 0 0 1 54.67 82.75 Z" fill="#000" stroke="#000" stroke-width="10" stroke-linejoin="round"/>
-      <circle cx="18.5" cy="36" r="2.4" fill="#000"/><circle cx="24.5" cy="36" r="2.4" fill="#000"/><circle cx="30.5" cy="36" r="2.4" fill="#000"/>
+    <mask id="window">
+      <rect x="8" y="25" width="44" height="50" rx="7" fill="#fff"/>
+      <rect x="13" y="30" width="34" height="40" rx="4.5" fill="#000"/>
+      <polygon points="36,50 55,25 92,25 92,75 55,75" fill="#000" stroke="#000" stroke-width="6" stroke-linejoin="round"/>
     </mask>
   </defs>
-  <rect x="14" y="30" width="72" height="40" rx="4" fill="#000" mask="url(#corte)"/>
-  <path d="M31.23 50 L54.67 17.25 A3 3 0 0 1 57.11 16 L71.73 16 A3 3 0 0 1 74.17 20.75 L53.23 50 L74.17 79.25 A3 3 0 0 1 71.73 84 L57.11 84 A3 3 0 0 1 54.67 82.75 Z" fill="none" stroke="#000" stroke-width="5" stroke-linejoin="round"/>
+  <rect class="ink" width="100" height="100" stroke="none" mask="url(#window)"/>
+  <g class="ink" stroke="none"><circle cx="19.5" cy="36" r="2.2"/><circle cx="25.5" cy="36" r="2.2"/><circle cx="31.5" cy="36" r="2.2"/></g>
+  <polygon class="ink" points="41.02,50 56.98,29 88,29 88,71 56.98,71" stroke-width="8" stroke-linejoin="round"/>
 </svg>
