@@ -30,6 +30,14 @@ macOS 11 or later.
 open Kandela.app
 ```
 
+`./build.sh --install` also replaces `/Applications/Kandela.app` (the copy
+meant for daily use, independent of this folder's development builds) and, if
+Kandela is running, quits it and opens the new one. The build stamps its commit
+in `Info.plist` as `KandelaCommit` (`-dirty` when a tracked file had
+uncommitted changes). In Kommand, the deploy button runs `/km-instalar`
+(`.claude/commands/km-instalar.md`): it checks the main checkout, installs and
+verifies what was installed.
+
 Kandela's K shows up in the menu bar with (names follow the system language;
 in English):
 
@@ -86,7 +94,8 @@ any key used in the code is missing from any language.
 
 ## Launch at login
 
-System Settings → General → Login Items & Extensions → "+" → Kandela.app
+System Settings → General → Login Items & Extensions → "+" → `/Applications/Kandela.app`
+(`/km-instalar` moves an existing login item there).
 
 ## Known limitations (vs. the paid HazeOver)
 

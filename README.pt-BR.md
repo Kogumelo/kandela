@@ -30,6 +30,14 @@ macOS 11 ou mais novo.
 open Kandela.app
 ```
 
+`./build.sh --install` também troca o `/Applications/Kandela.app` (a cópia de
+uso diário, independente dos builds de desenvolvimento desta pasta) e, se o
+Kandela estiver aberto, fecha o velho e abre o novo. O build carimba o commit no
+`Info.plist`, em `KandelaCommit` (`-dirty` quando havia arquivo versionado com
+mudança não commitada). No Kommand, o botão de deploy roda `/km-instalar`
+(`.claude/commands/km-instalar.md`): confere o checkout principal, instala e
+confere o que foi instalado.
+
 Aparece o K do Kandela na barra de menus com (os nomes seguem o idioma do
 sistema; em português):
 
@@ -86,7 +94,8 @@ acrescentar um idioma, copie `Resources/en.lproj` para
 
 ## Iniciar junto com o sistema
 
-Ajustes do Sistema → Geral → Itens de Início e Extensões → "+" → Kandela.app
+Ajustes do Sistema → Geral → Itens de Início e Extensões → "+" → `/Applications/Kandela.app`
+(o `/km-instalar` muda para lá um item de início que já exista).
 
 ## Limitações conhecidas (vs. HazeOver pago)
 
