@@ -39,53 +39,50 @@ final class OverlayWindow: NSWindow {
 
 // MARK: - Mark (menu bar icon)
 
-// Kandela's K, on the 100×100 grid of Assets/kandela-mark.svg: a background window
-// (72×40 block) with the three macOS traffic-light dots cut out at the top left; the
-// part of it left of the vertex is the stem. The arms are hollow (5-wide outline)
-// inside a 10-wide cutout in the block. It is a template image, so macOS paints it
-// black or white to match the menu bar.
-func kandelaArms(_ p: (CGFloat, CGFloat) -> NSPoint, radius r: CGFloat) -> NSBezierPath {
-    // Arms: 22 wide horizontally, tip corners rounded with radius 3;
-    // the point and the joint stay sharp.
+// Kandela's K redrawn for the menu bar, on an 18×18 pt grid (Assets/kandela-menubar.svg).
+// Scaling Assets/kandela-mark.svg down to 18 pt turned it into a blur (hollow arms with
+// sub-point lines, dots under one pixel), so this version keeps the idea with fewer,
+// bigger parts: a background window (16×9 block) with the three traffic-light dots
+// cut out, solid arms (the app icon's), and a 1 pt gap between arms and block. Every
+// edge falls on half points, i.e. whole pixels on Retina. It is a template image, so
+// macOS paints it black or white to match the menu bar.
+func kandelaArms() -> NSBezierPath {
+    // Vertex at (7.5, 9), arms 3.5 wide horizontally and running from y 1 to 17
+    // (the slope of kandela-mark.svg); tip corners rounded with radius 0.75.
+    let r: CGFloat = 0.75
     let arms = NSBezierPath()
-    arms.move(to: p(31.23, 50))
-    arms.appendArc(from: p(55.57, 16), to: p(77.57, 16), radius: r)
-    arms.appendArc(from: p(77.57, 16), to: p(53.23, 50), radius: r)
-    arms.line(to: p(53.23, 50))
-    arms.appendArc(from: p(77.57, 84), to: p(55.57, 84), radius: r)
-    arms.appendArc(from: p(55.57, 84), to: p(31.23, 50), radius: r)
+    arms.move(to: NSPoint(x: 7.5, y: 9))
+    arms.appendArc(from: NSPoint(x: 13.23, y: 1), to: NSPoint(x: 16.73, y: 1), radius: r)
+    arms.appendArc(from: NSPoint(x: 16.73, y: 1), to: NSPoint(x: 11, y: 9), radius: r)
+    arms.line(to: NSPoint(x: 11, y: 9))
+    arms.appendArc(from: NSPoint(x: 16.73, y: 17), to: NSPoint(x: 13.23, y: 17), radius: r)
+    arms.appendArc(from: NSPoint(x: 13.23, y: 17), to: NSPoint(x: 7.5, y: 9), radius: r)
     arms.close()
     arms.lineJoinStyle = .round
     return arms
 }
 
-let kandelaDots: [CGFloat] = [18.5, 24.5, 30.5]   // dot centers, at y = 36, radius 2.4
+let kandelaDots: [CGFloat] = [2.75, 4.75, 6.75]   // dot centers, at y = 6.75, diameter 1.5
 
-func kandelaMark(size: CGFloat) -> NSImage {
-    let img = NSImage(size: NSSize(width: size, height: size), flipped: true) { rect in
-        let s = rect.width / 100
-        func p(_ x: CGFloat, _ y: CGFloat) -> NSPoint { NSPoint(x: x * s, y: y * s) }
+func kandelaMark() -> NSImage {
+    let img = NSImage(size: NSSize(width: 18, height: 18), flipped: true) { _ in
         let ctx = NSGraphicsContext.current!
-        let arms = kandelaArms(p, radius: 3 * s)
+        let arms = kandelaArms()
 
         NSColor.black.setFill()
-        NSBezierPath(roundedRect: NSRect(x: 14 * s, y: 30 * s, width: 72 * s, height: 40 * s),
-                     xRadius: 4 * s, yRadius: 4 * s).fill()
+        NSBezierPath(roundedRect: NSRect(x: 1, y: 4.5, width: 16, height: 9), xRadius: 1.5, yRadius: 1.5).fill()
 
-        // Cutout: thickened arms (the gap) and the three dots.
+        // Cutout: the arms widened by the gap, and the three dots.
         ctx.compositingOperation = .destinationOut
-        arms.lineWidth = 10 * s
+        arms.lineWidth = 2
         arms.fill()
         arms.stroke()
         for cx in kandelaDots {
-            NSBezierPath(ovalIn: NSRect(x: (cx - 2.4) * s, y: (36 - 2.4) * s,
-                                        width: 4.8 * s, height: 4.8 * s)).fill()
+            NSBezierPath(ovalIn: NSRect(x: cx - 0.75, y: 6, width: 1.5, height: 1.5)).fill()
         }
         ctx.compositingOperation = .sourceOver
 
-        NSColor.black.setStroke()
-        arms.lineWidth = 5 * s
-        arms.stroke()
+        arms.fill()
         return true
     }
     img.isTemplate = true
@@ -235,7 +232,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func buildStatusItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        item.button?.image = kandelaMark(size: 18)
+        item.button?.image = kandelaMark()
         let menu = NSMenu()
         menu.delegate = self
         menu.autoenablesItems = false
