@@ -38,7 +38,7 @@ mudança não commitada). No Kommand, o botão de deploy roda `/km-instalar`
 (`.claude/commands/km-instalar.md`): confere o checkout principal, instala e
 confere o que foi instalado.
 
-Aparece o K do Kandela na barra de menus com (os nomes seguem o idioma do
+Aparece a marca do Kandela na barra de menus com (os nomes seguem o idioma do
 sistema; em português):
 
 - **Ativado** — liga/desliga o escurecimento
@@ -53,13 +53,14 @@ primeira abertura, o Kandela copia as que o `km-dimmer` tinha guardado em
 
 ## Ícone
 
-A marca (um K: a haste é uma janela de fundo apagada, com os três pontos do
-macOS, e os braços acesos ficam recortados por cima dela) está em
-`Assets/kandela-mark.svg`. O ícone da barra de menus é uma versão redesenhada
-para 18 pontos (`Assets/kandela-menubar.svg`: a janela só em contorno, braços
-cheios e pontos maiores, para ficar nítida), desenhada em código por
-`kandelaMark()` em `Sources/main.swift`; o do app fica em
-`Resources/AppIcon.icns`, gerado por:
+A marca são dois retângulos arredondados lado a lado: à esquerda uma janela de
+fundo, um pouco mais larga, em contorno e com os três pontos do macOS; à direita
+um bloco cheio cuja ponta entra na janela, com uma pequena margem em volta. Ela
+está em `Assets/kandela-mark.svg` (escura em fundo claro, clara em fundo
+escuro). O ícone da barra de menus é o mesmo desenho ajustado a 18 pontos
+(`Assets/kandela-menubar.svg`, com toda borda num pixel inteiro do Retina),
+desenhado em código por `kandelaMark()` em `Sources/main.swift`; o do app fica
+em `Resources/AppIcon.icns`, gerado por:
 
 ```sh
 swift Tools/make-icon.swift

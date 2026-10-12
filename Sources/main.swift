@@ -39,52 +39,50 @@ final class OverlayWindow: NSWindow {
 
 // MARK: - Mark (menu bar icon)
 
-// Kandela's K redrawn for the menu bar, on an 18×18 pt grid (Assets/kandela-menubar.svg).
-// Scaling Assets/kandela-mark.svg down to 18 pt turned it into a blur (hollow arms with
-// sub-point lines, dots under one pixel), so this version keeps the idea with fewer,
-// bigger parts: a background window drawn as a 1 pt outline (16×9 outside) with the
-// three traffic-light dots, solid arms (the app icon's), and a 1 pt gap cut between
-// arms and window. Every edge falls on half points, i.e. whole pixels on Retina. It is a template image, so
-// macOS paints it black or white to match the menu bar.
-func kandelaArms() -> NSBezierPath {
-    // Vertex at (7.5, 9), arms 3.5 wide horizontally and running from y 1 to 17
-    // (the slope of kandela-mark.svg); tip corners rounded with radius 0.75.
-    let r: CGFloat = 0.75
-    let arms = NSBezierPath()
-    arms.move(to: NSPoint(x: 7.5, y: 9))
-    arms.appendArc(from: NSPoint(x: 13.23, y: 1), to: NSPoint(x: 16.73, y: 1), radius: r)
-    arms.appendArc(from: NSPoint(x: 16.73, y: 1), to: NSPoint(x: 11, y: 9), radius: r)
-    arms.line(to: NSPoint(x: 11, y: 9))
-    arms.appendArc(from: NSPoint(x: 16.73, y: 17), to: NSPoint(x: 13.23, y: 17), radius: r)
-    arms.appendArc(from: NSPoint(x: 13.23, y: 17), to: NSPoint(x: 7.5, y: 9), radius: r)
-    arms.close()
-    arms.lineJoinStyle = .round
-    return arms
+// Kandela's mark drawn for the menu bar, on an 18×18 pt grid (Assets/kandela-menubar.svg;
+// the large version is Assets/kandela-mark.svg). Two rounded rectangles side by side,
+// both 10 pt tall: on the left a background window in a 1 pt outline with the three
+// traffic-light dots, a little wider; on the right a solid block whose left side is a
+// point that enters the window, with a 1 pt gap cut around it. Edges fall on half
+// points, i.e. whole pixels on Retina. It is a template image, so macOS paints it
+// black or white to match the menu bar.
+func kandelaBlock() -> NSBezierPath {
+    // Point at (7, 9); block from x 10.5 to 17, y 4 to 14.
+    let block = NSBezierPath()
+    block.move(to: NSPoint(x: 7, y: 9))
+    block.appendArc(from: NSPoint(x: 10.5, y: 4), to: NSPoint(x: 17, y: 4), radius: 0.75)
+    block.appendArc(from: NSPoint(x: 17, y: 4), to: NSPoint(x: 17, y: 14), radius: 1)
+    block.appendArc(from: NSPoint(x: 17, y: 14), to: NSPoint(x: 10.5, y: 14), radius: 1)
+    block.appendArc(from: NSPoint(x: 10.5, y: 14), to: NSPoint(x: 7, y: 9), radius: 0.75)
+    block.close()
+    block.lineJoinStyle = .round
+    return block
 }
 
-let kandelaDots: [CGFloat] = [3.25, 5.25, 7.25]   // dot centers, at y = 6.75, diameter 1.5
+let kandelaDots: [CGFloat] = [3, 4.75, 6.5]   // dot centers, at y = 6.25, diameter 1.25
 
 func kandelaMark() -> NSImage {
     let img = NSImage(size: NSSize(width: 18, height: 18), flipped: true) { _ in
         let ctx = NSGraphicsContext.current!
-        let arms = kandelaArms()
+        let block = kandelaBlock()
 
+        // Window: outside from x 1 to 9.5, y 4 to 14.
         NSColor.black.set()
-        let window = NSBezierPath(roundedRect: NSRect(x: 1.5, y: 5, width: 15, height: 8), xRadius: 1, yRadius: 1)
+        let window = NSBezierPath(roundedRect: NSRect(x: 1.5, y: 4.5, width: 7.5, height: 9), xRadius: 1.5, yRadius: 1.5)
         window.lineWidth = 1
         window.stroke()
         for cx in kandelaDots {
-            NSBezierPath(ovalIn: NSRect(x: cx - 0.75, y: 6, width: 1.5, height: 1.5)).fill()
+            NSBezierPath(ovalIn: NSRect(x: cx - 0.625, y: 5.625, width: 1.25, height: 1.25)).fill()
         }
 
-        // Cutout: the arms widened by the gap.
+        // Cutout: the block widened by the gap.
         ctx.compositingOperation = .destinationOut
-        arms.lineWidth = 2
-        arms.fill()
-        arms.stroke()
+        block.lineWidth = 2
+        block.fill()
+        block.stroke()
         ctx.compositingOperation = .sourceOver
 
-        arms.fill()
+        block.fill()
         return true
     }
     img.isTemplate = true

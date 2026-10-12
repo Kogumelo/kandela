@@ -1,5 +1,5 @@
-// Builds Resources/AppIcon.icns from the mark (same geometry as
-// Assets/kandela-mark.svg; the menu bar has its own small version, kandelaMark()).
+// Builds Resources/AppIcon.icns from the mark (same geometry as Assets/kandela-mark.svg
+// and Assets/kandela.svg; the menu bar has its own small version, kandelaMark()).
 // Usage: swift Tools/make-icon.swift   (from the project root)
 import AppKit
 
@@ -30,45 +30,54 @@ func drawIcon(px: Int) -> Data {
     grad.draw(in: tile, relativeCenterPosition: NSPoint(x: -0.4, y: 0.6))
     NSGraphicsContext.restoreGraphicsState()
 
-    // Mark: 100×100 grid at 98.43% of the square (the K, from 16 to 84 on the grid,
-    // sits 1/6 of the tile from the top and bottom edges), centered.
-    let side = 824 * 0.9843 * k
-    let ox = tile.midX - side / 2, oy = tile.midY - side / 2
-    let s = side / 100
-    func p(_ x: CGFloat, _ y: CGFloat) -> NSPoint { NSPoint(x: ox + x * s, y: oy + (100 - y) * s) }
+    // Mark: the 100×100 grid of Assets/kandela-mark.svg at 0.73 of the 100 units of
+    // Assets/kandela.svg (whose tile is 84 units = 824 px), centered: translate 13.5.
+    let u = 824 / 84 * k
+    let s = 0.73 * u
+    func p(_ x: CGFloat, _ y: CGFloat) -> NSPoint {
+        NSPoint(x: 100 * k + (13.5 + 0.73 * x - 8) * u, y: 924 * k - (13.5 + 0.73 * y - 8) * u)
+    }
+    func polygon(_ pts: [(CGFloat, CGFloat)]) -> NSBezierPath {
+        let path = NSBezierPath()
+        path.move(to: p(pts[0].0, pts[0].1))
+        for q in pts.dropFirst() { path.line(to: p(q.0, q.1)) }
+        path.close()
+        path.lineJoinStyle = .round
+        return path
+    }
+    let cream = rgb(0xfff3dc)
 
-    let r = 3 * s
-    let arms = NSBezierPath()
-    arms.move(to: p(31.23, 50))
-    arms.appendArc(from: p(55.57, 16), to: p(77.57, 16), radius: r)
-    arms.appendArc(from: p(77.57, 16), to: p(53.23, 50), radius: r)
-    arms.line(to: p(53.23, 50))
-    arms.appendArc(from: p(77.57, 84), to: p(55.57, 84), radius: r)
-    arms.appendArc(from: p(55.57, 84), to: p(31.23, 50), radius: r)
-    arms.close()
-    arms.lineJoinStyle = .round
-
-    // Dimmed background window (55%) in its own layer, so that cutting out the
-    // arms (2.5 gap) and the three dots does not erase the tile underneath.
+    // Window (x 8 to 52, y 25 to 75, 5-wide outline) in its own layer, so that cutting
+    // out its opening and the 3-wide gap around the block does not erase the tile.
     let cg = ctx.cgContext
     cg.beginTransparencyLayer(auxiliaryInfo: nil)
-    rgb(0x7f8db8).withAlphaComponent(0.55).setFill()
-    NSBezierPath(roundedRect: NSRect(x: ox + 14 * s, y: oy + 30 * s, width: 72 * s, height: 40 * s),
-                 xRadius: 4 * s, yRadius: 4 * s).fill()
+    cream.setFill()
+    NSBezierPath(roundedRect: NSRect(origin: p(8, 75), size: NSSize(width: 44 * s, height: 50 * s)),
+                 xRadius: 7 * s, yRadius: 7 * s).fill()
     ctx.compositingOperation = .destinationOut
-    arms.lineWidth = 5 * s
-    arms.fill()
-    arms.stroke()
-    for cx: CGFloat in [18.5, 24.5, 30.5] {
-        let c = p(cx, 36)
-        NSBezierPath(ovalIn: NSRect(x: c.x - 2.4 * s, y: c.y - 2.4 * s,
-                                    width: 4.8 * s, height: 4.8 * s)).fill()
-    }
+    NSBezierPath(roundedRect: NSRect(origin: p(13, 70), size: NSSize(width: 34 * s, height: 40 * s)),
+                 xRadius: 4.5 * s, yRadius: 4.5 * s).fill()
+    let gap = polygon([(36, 50), (55, 25), (92, 25), (92, 75), (55, 75)])
+    gap.lineWidth = 6 * s
+    gap.fill()
+    gap.stroke()
     ctx.compositingOperation = .sourceOver
     cg.endTransparencyLayer()
 
-    rgb(0xfff3dc).setFill()
-    arms.fill()
+    // The three dots, in amber.
+    rgb(0xe3a548).setFill()
+    for cx: CGFloat in [19.5, 25.5, 31.5] {
+        let c = p(cx, 36)
+        NSBezierPath(ovalIn: NSRect(x: c.x - 2.2 * s, y: c.y - 2.2 * s, width: 4.4 * s, height: 4.4 * s)).fill()
+    }
+
+    // Block with the point (x 36 to 92), corners rounded with radius 4: the polygon
+    // moved in by 4, filled and stroked 8 wide with round joins.
+    let block = polygon([(41.02, 50), (56.98, 29), (88, 29), (88, 71), (56.98, 71)])
+    cream.set()
+    block.lineWidth = 8 * s
+    block.fill()
+    block.stroke()
 
     ctx.flushGraphics()
     NSGraphicsContext.restoreGraphicsState()

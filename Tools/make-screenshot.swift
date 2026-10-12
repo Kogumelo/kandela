@@ -107,33 +107,31 @@ func lines(x: CGFloat, y: CGFloat, widths: [CGFloat], gap: CGFloat = 16, color: 
 /// Assets/kandela-menubar.svg, on an 18 pt grid), in one color. The scene is flipped.
 func mark(at origin: NSPoint, color: NSColor) {
     func p(_ x: CGFloat, _ y: CGFloat) -> NSPoint { NSPoint(x: origin.x + x, y: origin.y + y) }
-    let r: CGFloat = 0.75
-    let arms = NSBezierPath()
-    arms.move(to: p(7.5, 9))
-    arms.appendArc(from: p(13.23, 1), to: p(16.73, 1), radius: r)
-    arms.appendArc(from: p(16.73, 1), to: p(11, 9), radius: r)
-    arms.line(to: p(11, 9))
-    arms.appendArc(from: p(16.73, 17), to: p(13.23, 17), radius: r)
-    arms.appendArc(from: p(13.23, 17), to: p(7.5, 9), radius: r)
-    arms.close()
-    arms.lineJoinStyle = .round
+    let block = NSBezierPath()
+    block.move(to: p(7, 9))
+    block.appendArc(from: p(10.5, 4), to: p(17, 4), radius: 0.75)
+    block.appendArc(from: p(17, 4), to: p(17, 14), radius: 1)
+    block.appendArc(from: p(17, 14), to: p(10.5, 14), radius: 1)
+    block.appendArc(from: p(10.5, 14), to: p(7, 9), radius: 0.75)
+    block.close()
+    block.lineJoinStyle = .round
 
     let ctx = NSGraphicsContext.current!
     ctx.cgContext.beginTransparencyLayer(auxiliaryInfo: nil)
     color.set()
-    let window = NSBezierPath(roundedRect: NSRect(x: origin.x + 1.5, y: origin.y + 5, width: 15, height: 8),
-                              xRadius: 1, yRadius: 1)
+    let window = NSBezierPath(roundedRect: NSRect(x: origin.x + 1.5, y: origin.y + 4.5, width: 7.5, height: 9),
+                              xRadius: 1.5, yRadius: 1.5)
     window.lineWidth = 1
     window.stroke()
-    for cx: CGFloat in [3.25, 5.25, 7.25] {
-        NSBezierPath(ovalIn: NSRect(x: origin.x + cx - 0.75, y: origin.y + 6, width: 1.5, height: 1.5)).fill()
+    for cx: CGFloat in [3, 4.75, 6.5] {
+        NSBezierPath(ovalIn: NSRect(x: origin.x + cx - 0.625, y: origin.y + 5.625, width: 1.25, height: 1.25)).fill()
     }
     ctx.compositingOperation = .destinationOut
-    arms.lineWidth = 2
-    arms.fill()
-    arms.stroke()
+    block.lineWidth = 2
+    block.fill()
+    block.stroke()
     ctx.compositingOperation = .sourceOver
-    arms.fill()
+    block.fill()
     ctx.cgContext.endTransparencyLayer()
 }
 
