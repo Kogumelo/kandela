@@ -120,16 +120,18 @@ func mark(at origin: NSPoint, color: NSColor) {
 
     let ctx = NSGraphicsContext.current!
     ctx.cgContext.beginTransparencyLayer(auxiliaryInfo: nil)
-    color.setFill()
-    NSBezierPath(roundedRect: NSRect(x: origin.x + 1, y: origin.y + 4.5, width: 16, height: 9),
-                 xRadius: 1.5, yRadius: 1.5).fill()
+    color.set()
+    let window = NSBezierPath(roundedRect: NSRect(x: origin.x + 1.5, y: origin.y + 5, width: 15, height: 8),
+                              xRadius: 1, yRadius: 1)
+    window.lineWidth = 1
+    window.stroke()
+    for cx: CGFloat in [3.25, 5.25, 7.25] {
+        NSBezierPath(ovalIn: NSRect(x: origin.x + cx - 0.75, y: origin.y + 6, width: 1.5, height: 1.5)).fill()
+    }
     ctx.compositingOperation = .destinationOut
     arms.lineWidth = 2
     arms.fill()
     arms.stroke()
-    for cx: CGFloat in [2.75, 4.75, 6.75] {
-        NSBezierPath(ovalIn: NSRect(x: origin.x + cx - 0.75, y: origin.y + 6, width: 1.5, height: 1.5)).fill()
-    }
     ctx.compositingOperation = .sourceOver
     arms.fill()
     ctx.cgContext.endTransparencyLayer()
