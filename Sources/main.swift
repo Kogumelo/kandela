@@ -42,9 +42,9 @@ final class OverlayWindow: NSWindow {
 // Kandela's K redrawn for the menu bar, on an 18×18 pt grid (Assets/kandela-menubar.svg).
 // Scaling Assets/kandela-mark.svg down to 18 pt turned it into a blur (hollow arms with
 // sub-point lines, dots under one pixel), so this version keeps the idea with fewer,
-// bigger parts: a background window (16×9 block) with the three traffic-light dots
-// cut out, solid arms (the app icon's), and a 1 pt gap between arms and block. Every
-// edge falls on half points, i.e. whole pixels on Retina. It is a template image, so
+// bigger parts: a background window drawn as a 1 pt outline (16×9 outside) with the
+// three traffic-light dots, solid arms (the app icon's), and a 1 pt gap cut between
+// arms and window. Every edge falls on half points, i.e. whole pixels on Retina. It is a template image, so
 // macOS paints it black or white to match the menu bar.
 func kandelaArms() -> NSBezierPath {
     // Vertex at (7.5, 9), arms 3.5 wide horizontally and running from y 1 to 17
@@ -62,24 +62,26 @@ func kandelaArms() -> NSBezierPath {
     return arms
 }
 
-let kandelaDots: [CGFloat] = [2.75, 4.75, 6.75]   // dot centers, at y = 6.75, diameter 1.5
+let kandelaDots: [CGFloat] = [3.25, 5.25, 7.25]   // dot centers, at y = 6.75, diameter 1.5
 
 func kandelaMark() -> NSImage {
     let img = NSImage(size: NSSize(width: 18, height: 18), flipped: true) { _ in
         let ctx = NSGraphicsContext.current!
         let arms = kandelaArms()
 
-        NSColor.black.setFill()
-        NSBezierPath(roundedRect: NSRect(x: 1, y: 4.5, width: 16, height: 9), xRadius: 1.5, yRadius: 1.5).fill()
+        NSColor.black.set()
+        let window = NSBezierPath(roundedRect: NSRect(x: 1.5, y: 5, width: 15, height: 8), xRadius: 1, yRadius: 1)
+        window.lineWidth = 1
+        window.stroke()
+        for cx in kandelaDots {
+            NSBezierPath(ovalIn: NSRect(x: cx - 0.75, y: 6, width: 1.5, height: 1.5)).fill()
+        }
 
-        // Cutout: the arms widened by the gap, and the three dots.
+        // Cutout: the arms widened by the gap.
         ctx.compositingOperation = .destinationOut
         arms.lineWidth = 2
         arms.fill()
         arms.stroke()
-        for cx in kandelaDots {
-            NSBezierPath(ovalIn: NSRect(x: cx - 0.75, y: 6, width: 1.5, height: 1.5)).fill()
-        }
         ctx.compositingOperation = .sourceOver
 
         arms.fill()

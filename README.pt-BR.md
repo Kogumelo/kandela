@@ -56,9 +56,10 @@ primeira abertura, o Kandela copia as que o `km-dimmer` tinha guardado em
 A marca (um K: a haste é uma janela de fundo apagada, com os três pontos do
 macOS, e os braços acesos ficam recortados por cima dela) está em
 `Assets/kandela-mark.svg`. O ícone da barra de menus é uma versão redesenhada
-para 18 pontos (`Assets/kandela-menubar.svg`, com braços cheios e pontos
-maiores para ficar nítida), desenhada em código por `kandelaMark()` em
-`Sources/main.swift`; o do app fica em `Resources/AppIcon.icns`, gerado por:
+para 18 pontos (`Assets/kandela-menubar.svg`: a janela só em contorno, braços
+cheios e pontos maiores, para ficar nítida), desenhada em código por
+`kandelaMark()` em `Sources/main.swift`; o do app fica em
+`Resources/AppIcon.icns`, gerado por:
 
 ```sh
 swift Tools/make-icon.swift
