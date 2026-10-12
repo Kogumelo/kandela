@@ -30,6 +30,14 @@ macOS 11 ou mais novo.
 open Kandela.app
 ```
 
+`./build.sh --install` também troca o `/Applications/Kandela.app` (a cópia de
+uso diário, independente dos builds de desenvolvimento desta pasta) e, se o
+Kandela estiver aberto, fecha o velho e abre o novo. O build carimba o commit no
+`Info.plist`, em `KandelaCommit` (`-dirty` quando havia arquivo versionado com
+mudança não commitada). No Kommand, o botão de deploy roda `/km-instalar`
+(`.claude/commands/km-instalar.md`): confere o checkout principal, instala e
+confere o que foi instalado.
+
 Aparece o K do Kandela na barra de menus com (os nomes seguem o idioma do
 sistema; em português):
 
@@ -47,9 +55,10 @@ primeira abertura, o Kandela copia as que o `km-dimmer` tinha guardado em
 
 A marca (um K: a haste é uma janela de fundo apagada, com os três pontos do
 macOS, e os braços acesos ficam recortados por cima dela) está em
-`Assets/kandela-mark.svg`. O ícone da barra de menus é desenhado em código
-(`kandelaMark(size:)` em `Sources/main.swift`); o do app fica em
-`Resources/AppIcon.icns`, gerado por:
+`Assets/kandela-mark.svg`. O ícone da barra de menus é uma versão redesenhada
+para 18 pontos (`Assets/kandela-menubar.svg`, com braços cheios e pontos
+maiores para ficar nítida), desenhada em código por `kandelaMark()` em
+`Sources/main.swift`; o do app fica em `Resources/AppIcon.icns`, gerado por:
 
 ```sh
 swift Tools/make-icon.swift
@@ -58,7 +67,9 @@ swift Tools/make-icon.swift
 O ícone colorido do app também existe em SVG, em `Assets/kandela.svg`
 (para usar como logo do projeto em outros lugares).
 
-As versões usam a mesma geometria: mudou uma, mude as outras.
+As versões grandes (marca, ícone do app, SVGs) usam a mesma geometria, e a da
+barra de menus tem a sua, em `kandelaMark()`, `Assets/kandela-menubar.svg` e
+`Tools/make-screenshot.swift`: mudou uma, mude as outras do mesmo grupo.
 
 ## Imagem do README
 
@@ -83,7 +94,8 @@ acrescentar um idioma, copie `Resources/en.lproj` para
 
 ## Iniciar junto com o sistema
 
-Ajustes do Sistema → Geral → Itens de Início e Extensões → "+" → Kandela.app
+Ajustes do Sistema → Geral → Itens de Início e Extensões → "+" → `/Applications/Kandela.app`
+(o `/km-instalar` muda para lá um item de início que já exista).
 
 ## Limitações conhecidas (vs. HazeOver pago)
 

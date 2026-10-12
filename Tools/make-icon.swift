@@ -1,5 +1,5 @@
 // Builds Resources/AppIcon.icns from the mark (same geometry as
-// Assets/kandela-mark.svg and kandelaMark(size:) in Sources/main.swift).
+// Assets/kandela-mark.svg; the menu bar has its own small version, kandelaMark()).
 // Usage: swift Tools/make-icon.swift   (from the project root)
 import AppKit
 

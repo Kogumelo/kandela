@@ -103,38 +103,35 @@ func lines(x: CGFloat, y: CGFloat, widths: [CGFloat], gap: CGFloat = 16, color: 
     }
 }
 
-/// Kandela's K (same geometry as kandelaMark(size:) in Sources/main.swift), in one color.
-func mark(at origin: NSPoint, size: CGFloat, color: NSColor) {
-    let s = size / 100
-    func p(_ x: CGFloat, _ y: CGFloat) -> NSPoint { NSPoint(x: origin.x + x * s, y: origin.y + y * s) }
-    let r = 3 * s
+/// Kandela's menu bar icon (same geometry as kandelaMark() in Sources/main.swift and
+/// Assets/kandela-menubar.svg, on an 18 pt grid), in one color. The scene is flipped.
+func mark(at origin: NSPoint, color: NSColor) {
+    func p(_ x: CGFloat, _ y: CGFloat) -> NSPoint { NSPoint(x: origin.x + x, y: origin.y + y) }
+    let r: CGFloat = 0.75
     let arms = NSBezierPath()
-    arms.move(to: p(31.23, 50))
-    arms.appendArc(from: p(55.57, 16), to: p(77.57, 16), radius: r)
-    arms.appendArc(from: p(77.57, 16), to: p(53.23, 50), radius: r)
-    arms.line(to: p(53.23, 50))
-    arms.appendArc(from: p(77.57, 84), to: p(55.57, 84), radius: r)
-    arms.appendArc(from: p(55.57, 84), to: p(31.23, 50), radius: r)
+    arms.move(to: p(7.5, 9))
+    arms.appendArc(from: p(13.23, 1), to: p(16.73, 1), radius: r)
+    arms.appendArc(from: p(16.73, 1), to: p(11, 9), radius: r)
+    arms.line(to: p(11, 9))
+    arms.appendArc(from: p(16.73, 17), to: p(13.23, 17), radius: r)
+    arms.appendArc(from: p(13.23, 17), to: p(7.5, 9), radius: r)
     arms.close()
     arms.lineJoinStyle = .round
 
     let ctx = NSGraphicsContext.current!
     ctx.cgContext.beginTransparencyLayer(auxiliaryInfo: nil)
     color.setFill()
-    NSBezierPath(roundedRect: NSRect(x: origin.x + 14 * s, y: origin.y + 30 * s, width: 72 * s, height: 40 * s),
-                 xRadius: 4 * s, yRadius: 4 * s).fill()
+    NSBezierPath(roundedRect: NSRect(x: origin.x + 1, y: origin.y + 4.5, width: 16, height: 9),
+                 xRadius: 1.5, yRadius: 1.5).fill()
     ctx.compositingOperation = .destinationOut
-    arms.lineWidth = 10 * s
+    arms.lineWidth = 2
     arms.fill()
     arms.stroke()
-    for cx: CGFloat in [18.5, 24.5, 30.5] {
-        NSBezierPath(ovalIn: NSRect(x: origin.x + (cx - 2.4) * s, y: origin.y + (36 - 2.4) * s,
-                                    width: 4.8 * s, height: 4.8 * s)).fill()
+    for cx: CGFloat in [2.75, 4.75, 6.75] {
+        NSBezierPath(ovalIn: NSRect(x: origin.x + cx - 0.75, y: origin.y + 6, width: 1.5, height: 1.5)).fill()
     }
     ctx.compositingOperation = .sourceOver
-    color.setStroke()
-    arms.lineWidth = 5 * s
-    arms.stroke()
+    arms.fill()
     ctx.cgContext.endTransparencyLayer()
 }
 
@@ -198,7 +195,7 @@ func drawScene(_ t: Strings) {
     // Kandela's status item, highlighted because its menu is open.
     let kx = clockX - 46
     fillRound(NSRect(x: kx - 5, y: 2, width: 28, height: 20), 5, .black.withAlphaComponent(0.12))
-    mark(at: NSPoint(x: kx, y: 3), size: 18, color: .black)
+    mark(at: NSPoint(x: kx, y: 3), color: .black)
 
     // Kandela's menu.
     let menuFont = font(13.5)
