@@ -18,7 +18,8 @@ por K (ver também o [Konfig](https://github.com/Kogumelo/konfig)). Chamava-se
 Uma janela preta translúcida por monitor é mantida sempre **logo abaixo** da
 janela em foco na pilha global de janelas do macOS (números de janela são
 globais, então dá para ordenar relativo a janelas de outros apps). Cliques
-atravessam o overlay, e ele não aparece em capturas de tela.
+atravessam o overlay, e ele não aparece em capturas de tela. No monitor em que o
+app em foco está em tela cheia não há nada atrás para escurecer, e o overlay sai.
 
 ## Compilar e rodar
 
