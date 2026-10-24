@@ -109,7 +109,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var overlays: [OverlayWindow] = []
     private var timer: Timer?
     private var lastTarget: CGWindowID = 0
-    private var lastCovered: Set<Int> = []   // overlays hidden by a full-screen window
+    private var lastCovered: Set<Int> = []   // overlays hidden on a full-screen Space
+    private var sawDesktop = false           // a Finder desktop window has shown up at least once
 
     private let defaults = UserDefaults.standard
     private var enabled: Bool {
@@ -182,26 +183,45 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func updateOrdering(force: Bool) {
         guard enabled else { return }
         guard let list = CGWindowListCopyWindowInfo(
-                [.optionOnScreenOnly, .excludeDesktopElements],
+                [.optionOnScreenOnly],
                 kCGNullWindowID) as? [[String: Any]] else { return }
 
         let myPID = pid_t(ProcessInfo.processInfo.processIdentifier)
         let frontPID = NSWorkspace.shared.frontmostApplication?.processIdentifier
 
-        // The part of each display a full-screen window fills, in CG coordinates (origin
-        // at the top left of the main display): all of it, except the strip beside the
-        // camera notch, which full screen leaves to the menu bar. Same order as `overlays`.
+        // Display frames in CG coordinates (origin at the top left of the main display),
+        // in the same order as `overlays`.
         let mainHeight = NSScreen.screens.first?.frame.height ?? 0
-        let fullScreenRects = NSScreen.screens.map { s -> CGRect in
-            var top: CGFloat = 0
-            if #available(macOS 12.0, *) { top = s.safeAreaInsets.top }
-            let f = s.frame
-            return CGRect(x: f.minX, y: mainHeight - f.maxY + top, width: f.width, height: f.height - top)
+        let displayRects = NSScreen.screens.map {
+            CGRect(x: $0.frame.minX, y: mainHeight - $0.frame.maxY,
+                   width: $0.frame.width, height: $0.frame.height)
+        }
+
+        // A display showing a full-screen Space has nothing behind the app to dim, and the
+        // overlay, which joins those Spaces as an auxiliary window, is drawn above the app
+        // whatever its order. The window geometry doesn't tell full screen apart (Chrome
+        // splits it into a toolbar window and a content window below it), but the Space
+        // does: Finder's desktop window is on screen on a regular Space and absent on a
+        // full-screen one. Until that window has been seen (desktop disabled, Finder not
+        // running), no display is treated as full screen.
+        let desktopLevel = Int(CGWindowLevelForKey(.desktopIconWindow))
+        var desktops: [CGRect] = []
+        for info in list where (info[kCGWindowLayer as String] as? NSNumber)?.intValue == desktopLevel
+                            && info[kCGWindowOwnerName as String] as? String == "Finder" {
+            if let b = info[kCGWindowBounds as String] as? [String: Any],
+               let rect = CGRect(dictionaryRepresentation: b as CFDictionary) { desktops.append(rect) }
+        }
+        if !desktops.isEmpty { sawDesktop = true }
+        var covered: Set<Int> = []
+        if sawDesktop {
+            for (i, d) in displayRects.enumerated()
+            where !desktops.contains(where: { $0.contains(CGPoint(x: d.midX, y: d.midY)) }) {
+                covered.insert(i)
+            }
         }
 
         // The list is ordered front to back.
         var target: CGWindowID = 0
-        var covered: Set<Int> = []   // overlays whose display a focused-app window fills
         for info in list {
             guard (info[kCGWindowLayer as String] as? NSNumber)?.intValue == 0,
                   let pid = (info[kCGWindowOwnerPID as String] as? NSNumber)?.int32Value,
@@ -210,19 +230,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             else { continue }
             if let alpha = (info[kCGWindowAlpha as String] as? NSNumber)?.doubleValue,
                alpha == 0 { continue }                       // invisible windows
-            guard let b = info[kCGWindowBounds as String] as? [String: Any],
-                  let rect = CGRect(dictionaryRepresentation: b as CFDictionary),
-                  rect.width >= 50, rect.height >= 50 else { continue } // tiny helper windows
+            if let b = info[kCGWindowBounds as String] as? [String: Any],
+               let rect = CGRect(dictionaryRepresentation: b as CFDictionary),
+               rect.width < 50 || rect.height < 50 { continue } // tiny helper windows
             if let frontPID, pid != frontPID { continue }    // only the focused app's windows
-            // A window that fills a whole display is in full screen: it has a Space of its
-            // own, with nothing behind it to dim, and the overlay would end up over it (it
-            // joins full-screen Spaces as an auxiliary window, drawn above the app). The
-            // 2 pt slack absorbs the 1 pt between the notch inset and the window's top.
-            for (i, r) in fullScreenRects.enumerated() where rect.insetBy(dx: -2, dy: -2).contains(r) {
-                covered.insert(i)
-            }
-            if target == 0 { target = num }
-            if appMode { target = num }  // with appMode: the app's rearmost window
+            target = num          // without appMode: the frontmost one, then stop;
+            if !appMode { break } // with appMode: keep going to the app's rearmost one
         }
 
         if target == 0 {          // nothing focused (e.g. the desktop) → don't dim
