@@ -188,11 +188,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let myPID = pid_t(ProcessInfo.processInfo.processIdentifier)
         let frontPID = NSWorkspace.shared.frontmostApplication?.processIdentifier
 
-        // Overlay frames in CG coordinates (origin at the top left of the main display).
+        // The part of each display a full-screen window fills, in CG coordinates (origin
+        // at the top left of the main display): all of it, except the strip beside the
+        // camera notch, which full screen leaves to the menu bar. Same order as `overlays`.
         let mainHeight = NSScreen.screens.first?.frame.height ?? 0
-        let overlayRects = overlays.map { o -> CGRect in
-            let f = o.frame
-            return CGRect(x: f.minX, y: mainHeight - f.maxY, width: f.width, height: f.height)
+        let fullScreenRects = NSScreen.screens.map { s -> CGRect in
+            var top: CGFloat = 0
+            if #available(macOS 12.0, *) { top = s.safeAreaInsets.top }
+            let f = s.frame
+            return CGRect(x: f.minX, y: mainHeight - f.maxY + top, width: f.width, height: f.height - top)
         }
 
         // The list is ordered front to back.
@@ -210,10 +214,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                   let rect = CGRect(dictionaryRepresentation: b as CFDictionary),
                   rect.width >= 50, rect.height >= 50 else { continue } // tiny helper windows
             if let frontPID, pid != frontPID { continue }    // only the focused app's windows
-            // A window that fills a whole display, menu bar included, is in full screen:
-            // it has a Space of its own, with nothing behind it to dim, and the overlay
-            // would end up over it (it joins full-screen Spaces as an auxiliary window).
-            for (i, r) in overlayRects.enumerated() where rect.insetBy(dx: -1, dy: -1).contains(r) {
+            // A window that fills a whole display is in full screen: it has a Space of its
+            // own, with nothing behind it to dim, and the overlay would end up over it (it
+            // joins full-screen Spaces as an auxiliary window, drawn above the app). The
+            // 2 pt slack absorbs the 1 pt between the notch inset and the window's top.
+            for (i, r) in fullScreenRects.enumerated() where rect.insetBy(dx: -2, dy: -2).contains(r) {
                 covered.insert(i)
             }
             if target == 0 { target = num }
