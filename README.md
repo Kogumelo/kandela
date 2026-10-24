@@ -18,7 +18,8 @@ Part of Kogumelo's family of tools, each with its own name starting with K
 One translucent black window per display is always kept **right below** the
 focused window in macOS's global window stack (window numbers are global, so
 it can be ordered relative to other apps' windows). Clicks pass through the
-overlay, and it is left out of screenshots.
+overlay, and it is left out of screenshots. On a display where the focused app
+is in full screen there is nothing behind it to dim, so the overlay steps aside.
 
 ## Build and run
 

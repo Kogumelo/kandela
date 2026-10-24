@@ -109,6 +109,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var overlays: [OverlayWindow] = []
     private var timer: Timer?
     private var lastTarget: CGWindowID = 0
+    private var lastCovered: Set<Int> = []   // overlays hidden by a full-screen window
 
     private let defaults = UserDefaults.standard
     private var enabled: Bool {
@@ -157,6 +158,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         overlays.forEach { $0.orderOut(nil) }
         overlays = NSScreen.screens.map { OverlayWindow(screenFrame: $0.frame) }
         lastTarget = 0
+        lastCovered = []
     }
 
     private func applyIntensity(animated: Bool) {
@@ -186,8 +188,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let myPID = pid_t(ProcessInfo.processInfo.processIdentifier)
         let frontPID = NSWorkspace.shared.frontmostApplication?.processIdentifier
 
+        // Overlay frames in CG coordinates (origin at the top left of the main display).
+        let mainHeight = NSScreen.screens.first?.frame.height ?? 0
+        let overlayRects = overlays.map { o -> CGRect in
+            let f = o.frame
+            return CGRect(x: f.minX, y: mainHeight - f.maxY, width: f.width, height: f.height)
+        }
+
         // The list is ordered front to back.
         var target: CGWindowID = 0
+        var covered: Set<Int> = []   // overlays whose display a focused-app window fills
         for info in list {
             guard (info[kCGWindowLayer as String] as? NSNumber)?.intValue == 0,
                   let pid = (info[kCGWindowOwnerPID as String] as? NSNumber)?.int32Value,
@@ -196,24 +206,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             else { continue }
             if let alpha = (info[kCGWindowAlpha as String] as? NSNumber)?.doubleValue,
                alpha == 0 { continue }                       // invisible windows
-            if let b = info[kCGWindowBounds as String] as? [String: Any],
-               let rect = CGRect(dictionaryRepresentation: b as CFDictionary),
-               rect.width < 50 || rect.height < 50 { continue } // tiny helper windows
+            guard let b = info[kCGWindowBounds as String] as? [String: Any],
+                  let rect = CGRect(dictionaryRepresentation: b as CFDictionary),
+                  rect.width >= 50, rect.height >= 50 else { continue } // tiny helper windows
             if let frontPID, pid != frontPID { continue }    // only the focused app's windows
-            target = num          // without appMode: the frontmost one, then stop;
-            if !appMode { break } // with appMode: keep going to the app's rearmost one
+            // A window that fills a whole display, menu bar included, is in full screen:
+            // it has a Space of its own, with nothing behind it to dim, and the overlay
+            // would end up over it (it joins full-screen Spaces as an auxiliary window).
+            for (i, r) in overlayRects.enumerated() where rect.insetBy(dx: -1, dy: -1).contains(r) {
+                covered.insert(i)
+            }
+            if target == 0 { target = num }
+            if appMode { target = num }  // with appMode: the app's rearmost window
         }
 
         if target == 0 {          // nothing focused (e.g. the desktop) → don't dim
             if lastTarget != 0 || force {
                 overlays.forEach { $0.orderOut(nil) }
                 lastTarget = 0
+                lastCovered = []
             }
             return
         }
-        guard force || target != lastTarget else { return }
+        guard force || target != lastTarget || covered != lastCovered else { return }
         lastTarget = target
-        overlays.forEach { $0.order(.below, relativeTo: Int(target)) }
+        lastCovered = covered
+        for (i, o) in overlays.enumerated() {
+            if covered.contains(i) { o.orderOut(nil) } else { o.order(.below, relativeTo: Int(target)) }
+        }
     }
 
     /// Until 2026-10-11 the app was called km-dimmer, with bundle id `br.com.kogut.km-dimmer`.
