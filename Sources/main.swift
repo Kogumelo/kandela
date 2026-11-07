@@ -111,6 +111,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var lastTarget: CGWindowID = 0
     private var lastCovered: Set<Int> = []   // overlays hidden on a full-screen Space
     private var sawDesktop = false           // a Finder desktop window has shown up at least once
+    private var misplacedTicks = 0           // consecutive checks with an overlay above its target
 
     private let defaults = UserDefaults.standard
     private var enabled: Bool {
@@ -246,12 +247,38 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             }
             return
         }
-        guard force || target != lastTarget || covered != lastCovered else { return }
+
+        // An overlay above the target darkens the focused window too, and it can get there
+        // with the target unchanged. A window can also go bad and stop obeying the order,
+        // landing above the target every time, until it is replaced: order it again, then
+        // replace it, and if even that fails take it away, since no dimming beats a dark screen.
+        let misplaced = target == lastTarget && overlayIsAbove(target, in: list)
+        misplacedTicks = misplaced ? misplacedTicks + 1 : 0
+        if misplacedTicks == 2 {
+            buildOverlays()
+            applyIntensity(animated: false)
+        } else if misplacedTicks > 2 {
+            overlays.forEach { $0.orderOut(nil) }
+            return
+        }
+
+        guard force || misplaced || target != lastTarget || covered != lastCovered else { return }
         lastTarget = target
         lastCovered = covered
         for (i, o) in overlays.enumerated() {
             if covered.contains(i) { o.orderOut(nil) } else { o.order(.below, relativeTo: Int(target)) }
         }
+    }
+
+    /// Whether any overlay comes before `target` in the window list, which is ordered front to back.
+    private func overlayIsAbove(_ target: CGWindowID, in list: [[String: Any]]) -> Bool {
+        let mine = Set(overlays.map { CGWindowID($0.windowNumber) })
+        for info in list {
+            guard let num = (info[kCGWindowNumber as String] as? NSNumber)?.uint32Value else { continue }
+            if num == target { return false }
+            if mine.contains(num) { return true }
+        }
+        return false
     }
 
     /// Until 2026-10-11 the app was called km-dimmer, with bundle id `br.com.kogut.km-dimmer`.
